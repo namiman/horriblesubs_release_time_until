@@ -1,2 +1,7 @@
-# horriblesubs_release_time_until
-Change times on horriblesubs to "until/ago" and highlight shows you're watching
+# Horriblesubs Release Time Until
+
+Changes the times on Horriblesubs /release_page and the sidebar on every page to "until/ago" format
+
+Allows you to persitently highlight show you'd like to track
+
+Adds a sidebar on /release_page with any saved shows
