@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Horriblesubs Release Time Until
 // @namespace    horriblesubs_release_time_until
-// @description  Change times on horriblesubs to "until/ago" and highlight shows you're watching
+// @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and alerts you of newly added shows
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1
-// @date         2015-12-07
+// @version      1.1
+// @date         2015-12-19
 // @include      http://horriblesubs.info/*
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
 // @updateURL    https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.meta.js
@@ -15,9 +15,13 @@
 console.log( "Horriblesubs Release Time Until userscript loaded" );
 
 var user_shows_key = 'hrtu_user_shows';
+var all_shows_key = 'hrtu_all_shows';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
+var all_shows = JSON.parse( localStorage.getItem( all_shows_key ) );
+if ( ! all_shows )
+	all_shows = {};
 
 var weekdays = [
 	"YABOI", // horriblesubs starts the week on monday, not sunday
@@ -89,6 +93,10 @@ function sideBar() {
 			row.addClass( "hrtu_sidebar_highlight" );
 		else
 			row.removeClass( "hrtu_sidebar_highlight" );
+		if ( ! all_shows[ title_el.text() ] )
+			row.addClass( "hrtu_sidebar_highlight_new" );
+		else
+			row.removeClass( "hrtu_sidebar_highlight_new" );
 		var time_el = row.find( '.schedule-time' );
 		if ( time_el[0].hasAttribute( 'data-hrtu-time' ) )
 			var time_text = time_el.attr( 'title' );
@@ -117,7 +125,20 @@ function releasePage() {
 	}
 
 	if ( ! jQuery( '.hrtu_instructions' ).length )
-		jQuery( jQuery( ".entry-content ul" ).get(0) ).append( '<li class="hrtu_instructions">Click [+] or [-] on shows you\'re watching to highlight them</li>' );
+		jQuery( jQuery( ".entry-content ul" ).get(0) ).append(
+			'<li class="hrtu_instructions">Click [+] or [-] on shows you\'re watching to highlight them</li>' +
+			'<li class="hrtu_instructions">Shows with [NEW] are newly listed, click on [NEW] to unmark individual shows or <span id="hrtu_unmark_all_new">click here</span> to unmark all of them at once.</li>'
+		);
+
+	jQuery( '#hrtu_unmark_all_new' ).click(function(){
+		jQuery( '.schedule-page-show' ).each(function(){
+			var title = jQuery(this).find( "a" ).first().text();
+			all_shows[ fixTitle( title ) ] = 1;
+			localStorage.setItem( all_shows_key, JSON.stringify( all_shows ) );
+			releasePage();
+			sideBar();
+		});
+	});
 
 	var entry_day;
 	jQuery( '.entry-content' ).children().each(function(){
@@ -132,19 +153,19 @@ function releasePage() {
 		else if ( el.hasClass( 'schedule-today-table' ) ) {
 			el.find( '.schedule-page-show' ).each(function(){
 				var title_el = jQuery(this);
-				title_el.find( "a" ).text( fixTitle( title_el.find( "a" ).text() ) );
-				if ( user_shows[ title_el.find( "a" ).text() ] )
+				var title = fixTitle( title_el.find( "a" ).text() );
+				title_el.find( "a" ).text( title );
+
+				/* set up user shows */
+				if ( user_shows[ title ] )
 					title_el.parent().addClass( "hrtu_release_page_highlight" );
 				else
 					title_el.parent().removeClass( "hrtu_release_page_highlight" );
 				if ( ! title_el.find( '.hrtu_release_page_toggle' ).length ) {
 					title_el.append( '<div class="hrtu_release_page_toggle"></div>' );
 					title_el.on( "click", ".hrtu_release_page_toggle", function(e){
-						console.log( "click" );
 						var title = jQuery(this).parent().find( "a" ).text();
-						console.log( "title = " + title ); 
 						var is_saved = jQuery(this).parent().parent().hasClass( "hrtu_release_page_highlight" );
-						console.log( "set show to = " + ( is_saved ) ? 0 : 1 );
 						if ( is_saved ) {
 							delete user_shows[ title ];
 							hrtuSidebarRemoveShow( title );
@@ -158,6 +179,24 @@ function releasePage() {
 						e.stopPropagation();
 					});
 				}
+
+				/* set up new show */
+				if ( ! all_shows[ title ] ) {
+					title_el.parent().addClass( "hrtu_release_page_highlight_new" );
+					if ( ! title_el.find( '.hrtu_release_page_toggle_new' ).length ) {
+						title_el.append( '<div class="hrtu_release_page_toggle_new"></div>' );
+						title_el.on( "click", ".hrtu_release_page_toggle_new", function(e){
+							var title = jQuery(this).parent().find( "a" ).text();
+							all_shows[ title ] = 1
+							localStorage.setItem( all_shows_key, JSON.stringify( all_shows ) );
+							releasePage();
+							sideBar();
+							e.stopPropagation();
+						});
+					}
+				}
+				else
+					title_el.parent().removeClass( "hrtu_release_page_highlight_new" );
 			});
 			el.find( '.schedule-time' ).each(function(){
 				var show;
@@ -293,6 +332,10 @@ function addStyles() {
 		'		background-color: rgb( 191,209,236 );' +
 		'		color: rgb( 0,0,0 );' +
 		'	}' +
+		'	.hrtu .hrtu_sidebar_highlight_new {' +
+		'		background-color: rgb( 255,255,0 );' +
+		'		color: rgb( 0,0,0 );' +
+		'	}' +
 		'	.hrtu .hrtu_release_page_time_passed {' +
 		'		color: rgb( 179,179,179 );' +
 		'	}' +
@@ -314,15 +357,44 @@ function addStyles() {
 		'		display: inline-block;' +
 		'		margin-left: 7px;' +
 		'	}' +
+		'	.hrtu .hrtu_release_page_toggle_new {' +
+		'		text-align: center;' +
+		'		line-height: 24px;' +
+		'		cursor: pointer;' +
+		'		display: inline-block;' +
+		'		margin-left: 7px;' +
+		'	}' +
 		'	.hrtu .hrtu_release_page_toggle:before {' +
 		'		content: "[+]";' +
 		'	}' +
 		'	.hrtu .hrtu_release_page_highlight .hrtu_release_page_toggle:before {' +
 		'		content: "[-]";' +
 		'	}' +
+		'	.hrtu .hrtu_release_page_highlight_new {' +
+		'		background-color: rgb( 255,255,0 )' +
+		'	}' +
+		'	.hrtu .hrtu_release_page_highlight_new .hrtu_release_page_toggle_new:before {' +
+		'		content: "[NEW]";' +
+		'		font-weight: bold;' +
+		'	}' +
+		'	#hrtu_unmark_all_new {' +
+		'		height: 22px;' +
+		'		border: 1px solid rgb( 200,200,200 );' +
+		'		cursor: pointer;' +
+		'		color: rgb( 0,102,204 );' +
+		'		border-radius: 25px;' +
+		'		padding: 0px 8px 2px;' +
+		'		box-shadow: 0px 0px 5px rgba( 0,0,0, 0.1 );' +
+		'	}' +
+		'	#hrtu_unmark_all_new:hover {' +
+		'		border-color: rgb( 120,120,120 );' +
+		'	}' +
 		'</style>'
 	);
 }
+
+
+
 
 addStyles();
 sideBar();
