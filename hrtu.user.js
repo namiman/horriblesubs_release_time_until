@@ -4,9 +4,9 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and alerts you of newly added shows
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.1.1
-// @date         2015-12-19
-// @include      http://horriblesubs.info/*
+// @version      1.1.2
+// @date         2016-01-08
+// @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
 // @updateURL    https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.meta.js
 // @grant        none
