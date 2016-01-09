@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Horriblesubs Release Time Until
 // @namespace    horriblesubs_release_time_until
-// @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and alerts you of newly added shows
+// @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.1.2
+// @version      1.2
 // @date         2016-01-08
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
@@ -389,18 +389,56 @@ function addStyles() {
 		'	#hrtu_unmark_all_new:hover {' +
 		'		border-color: rgb( 120,120,120 );' +
 		'	}' +
+		'	.hrtu_show_outbound_links {' +
+		'		padding: 0px 8px 2px;' +
+		'		display: inline-block;' +
+		'		margin-top: 14px;' +
+		'		floaT: right;' +
+		'	}' +
+		'	.hrtu_show_outbound_link {' +
+		'		display: inline-block;' +
+		'		color: rgb( 170,175,191 );' +
+		'		border-right: 1px solid rgb( 220,220,220 );' +
+		'		font-style: italic;' +
+		'		padding: 0px 7px 0px 3px;' +
+		'	}' +
+		'	.hrtu_show_outbound_link:last-child {' +
+		'		border: 0px;' +
+		'	}' +
 		'</style>'
 	);
 }
 
+function showPage() {
+
+	jQuery( "article" ).each(function(){
+		var el = jQuery(this);
+		var title = encodeURIComponent( el.find( "> header .entry-title" ).text() );
+		var info_el = el.find( ".series-info" );
+		if ( ! info_el.find( ".hrtu_show_outbound_links" ).length ) {
+			info_el.append(
+				'<div class="hrtu_show_outbound_links">' +
+				'	<a class="hrtu_show_outbound_link"href="http://anidb.net/perl-bin/animedb.pl?adb.search='+ title +'&show=animelist&do.search=search">aniDB</a>' +
+				'	<a class="hrtu_show_outbound_link" href="http://www.anime-planet.com/anime/all?name='+ title +'">Anime-Planet</a>' +
+				'	<a class="hrtu_show_outbound_link" href="http://myanimelist.net/anime.php?q='+ title +'">MAL</a>' +
+				'	<a class="hrtu_show_outbound_link" href="https://hummingbird.me/search?query='+ title +'">Hummingbird</a>' +
+				'</div>'
+			);
+		}
+	});
+	
+}
 
 
+
+/* Userscript Logic */
 
 addStyles();
 sideBar();
 if ( window.location.pathname == '/release-schedule/' )
 	releasePage();
-
+else if ( /\/shows\/./.test( window.location.pathname ) )
+	showPage();
 
 setInterval( function(){
 	sideBar();
