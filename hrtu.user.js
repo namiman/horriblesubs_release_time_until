@@ -4,7 +4,7 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and alerts you of newly added shows
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.1
+// @version      1.1.1
 // @date         2015-12-19
 // @include      http://horriblesubs.info/*
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
@@ -127,7 +127,7 @@ function releasePage() {
 	if ( ! jQuery( '.hrtu_instructions' ).length )
 		jQuery( jQuery( ".entry-content ul" ).get(0) ).append(
 			'<li class="hrtu_instructions">Click [+] or [-] on shows you\'re watching to highlight them</li>' +
-			'<li class="hrtu_instructions">Shows with [NEW] are newly listed, click on [NEW] to unmark individual shows or <span id="hrtu_unmark_all_new">click here</span> to unmark all of them at once.</li>'
+			'<li class="hrtu_instructions">Shows with [NEW] are newly listed, click on [NEW] to unmark individual shows or <span id="hrtu_unmark_all_new">click&nbsp;here</span> to unmark all of them at once.</li>'
 		);
 
 	jQuery( '#hrtu_unmark_all_new' ).click(function(){
