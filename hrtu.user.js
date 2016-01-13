@@ -4,8 +4,8 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.2
-// @date         2016-01-08
+// @version      1.2.1
+// @date         2016-01-13
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
 // @updateURL    https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.meta.js
@@ -16,12 +16,34 @@ console.log( "Horriblesubs Release Time Until userscript loaded" );
 
 var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
+var version_key = 'hrtu_last_version';
+var is_new_install = false;
+var current_version = '1.2.1';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
 var all_shows = JSON.parse( localStorage.getItem( all_shows_key ) );
-if ( ! all_shows )
+if ( ! all_shows ) {
 	all_shows = {};
+	is_new_install = true;
+}
+var script_version = localStorage.getItem( version_key );
+if ( ! script_version ) {
+	if ( is_new_install )
+		script_version = current_version;
+	else
+		script_version = '0';
+}
+
+function updateVersion() {
+	if ( is_new_install ) {
+		console.log( "HRTU version: "+ current_version );
+	}
+//	else if ( script_version == '0' ) {
+
+//	}
+	localStorage.setItem( version_key, current_version );
+}
 
 var weekdays = [
 	"YABOI", // horriblesubs starts the week on monday, not sunday
@@ -76,24 +98,42 @@ function timeAgo( hours, minutes, day ) {
 	};
 }
 
+function linkIdentifier( link ) {
+	return link.substr( link.lastIndexOf( '/' ) + 1 );
+}
+
 function sideBar() {
-	if ( ! jQuery( '.schedule-today:not( .hrtu_sidebar )' ).length ) {
+	if ( ! jQuery( ".schedule-today:not( .hrtu_sidebar )" ).length ) {
 		console.warn( "Horriblesubs Release Time Until sideBar(): Unable to find '.schedule-today'" );
 		return false;
 	}
 	
-	jQuery( '.schedule-today:not( .hrtu_sidebar ) .schedule-table tr' ).each(function(){
+	jQuery( ".schedule-today:not( .hrtu_sidebar ) .schedule-table tr" ).each(function(){
 		var row = jQuery(this);
-		var title_el = row.find( '.schedule-widget-show' );
+		var title_el = row.find( ".schedule-widget-show" );
+		var no_link = false;
+		if ( ! title_el.length ) {
+			title_el = row.find( ".schedule-show" );
+			no_link = true;
+		}
 		if ( ! title_el.hasClass( "hrtu_sidebar_show_name" ) ) {
 			title_el.addClass( "hrtu_sidebar_show_name" );
-			title_el.find( "a" ).text( fixTitle( title_el.find( "a" ).text() ) );
+			if ( no_link ) {
+				var title = fixTitle( title_el.text() );
+				var link = false;
+				title_el.text( title );
+			}
+			else {
+				var title = fixTitle( title_el.find( "a" ).text() );
+				var link = linkIdentifier( title_el.find( "a" ).attr( "href" ) );
+				title_el.find( "a" ).text( title );
+			}
 		}
-		if ( user_shows[ title_el.text() ] )
+		if ( isUserShow( title, link ) )
 			row.addClass( "hrtu_sidebar_highlight" );
 		else
 			row.removeClass( "hrtu_sidebar_highlight" );
-		if ( ! all_shows[ title_el.text() ] )
+		if ( ! isAllShow( title, link ) )
 			row.addClass( "hrtu_sidebar_highlight_new" );
 		else
 			row.removeClass( "hrtu_sidebar_highlight_new" );
@@ -118,6 +158,94 @@ function fixTitle( str ) {
 	return str.replace( /\u2013|\u002D/g, "-" );
 }
 
+function addShow( title, link ) {
+	console.log( "addShow( "+ title +", "+ link +" )" )
+	if ( typeof all_shows[ title ] !== "undefined" ) {
+		if ( link ) {
+			all_shows[ link ] = 1;
+			delete all_shows[ title ];
+		}
+		else {
+			all_shows[ title ] = 1;
+		}
+	}
+	else {
+		if ( link )
+			all_shows[ link ] = 1;
+		else
+			all_shows[ title ] = 1;
+	}
+	localStorage.setItem( all_shows_key, JSON.stringify( all_shows ) );
+}
+
+function isAllShow( title, link ) {
+	console.log( "isAllShow( "+ title +", "+ link +" )" );
+	if ( ( typeof all_shows[ title ] !== "undefined" ) ) {
+		if ( link ) {
+			all_shows[ link ] = JSON.parse( JSON.stringify( all_shows[ title ] ) );
+			delete all_shows[ title ];
+		}
+		else {
+			all_shows[ title ] = 1;
+		}
+		localStorage.setItem( all_shows_key, JSON.stringify( all_shows ) );
+		return true
+	}
+	else {
+		return ( typeof all_shows[ link ] !== "undefined" );
+	}
+}
+
+function addUserShow( title, link ) {
+	console.log( "addUserShow( "+ title +", "+ link +" )" )
+	if ( typeof user_shows[ title ] !== "undefined" ) {
+		if ( link ) {
+			user_shows[ link ] = 1;
+			delete user_shows[ title ];
+		}
+		else {
+			user_shows[ title ] = 1;
+		}
+	}
+	else {
+		if ( link )
+			user_shows[ link ] = 1;
+		else
+			user_shows[ title ] = 1;
+	}
+	localStorage.setItem( user_shows_key, JSON.stringify( user_shows ) );
+}
+
+function removeUserShow( title, link ) {
+	console.log( "removeUserShow( "+ title +", "+ link +" )" )
+	delete user_shows[ title ];
+	delete user_shows[ link ];
+	localStorage.setItem( user_shows_key, JSON.stringify( user_shows ) );
+}
+/*
+function isUserShow( title, link ) {
+	console.log( "isUserShow( "+ title +", "+ link +" )" )
+	return ( typeof user_shows[ title ] !== "undefined" ) || ( typeof user_shows[ link ] !== "undefined" );
+}
+*/
+function isUserShow( title, link ) {
+	console.log( "isUserShow( "+ title +", "+ link +" )" );
+	if ( ( typeof user_shows[ title ] !== "undefined" ) ) {
+		if ( link ) {
+			user_shows[ link ] = JSON.parse( JSON.stringify( user_shows[ title ] ) );
+			delete user_shows[ title ];
+		}
+		else {
+			user_shows[ title ] = 1;
+		}
+		localStorage.setItem( user_shows_key, JSON.stringify( user_shows ) );
+		return true
+	}
+	else {
+		return ( typeof user_shows[ link ] !== "undefined" );
+	}
+}
+
 function releasePage() {
 	if ( ! jQuery( '.entry-content' ).length || ! jQuery( '.entry-content' ).children().length ) {
 		console.warn( "Horriblesubs Release Time Until releasePage(): Unable to find release entries" );
@@ -132,9 +260,10 @@ function releasePage() {
 
 	jQuery( '#hrtu_unmark_all_new' ).click(function(){
 		jQuery( '.schedule-page-show' ).each(function(){
-			var title = jQuery(this).find( "a" ).first().text();
-			all_shows[ fixTitle( title ) ] = 1;
-			localStorage.setItem( all_shows_key, JSON.stringify( all_shows ) );
+			var anchor_el = jQuery(this).find( "a" ).first();
+			var title = fixTitle( anchor_el.text() );
+			var link = linkIdentifier( anchor_el.attr( "href" ) );
+			addShow( title, link );
 			releasePage();
 			sideBar();
 		});
@@ -153,11 +282,13 @@ function releasePage() {
 		else if ( el.hasClass( 'schedule-today-table' ) ) {
 			el.find( '.schedule-page-show' ).each(function(){
 				var title_el = jQuery(this);
-				var title = fixTitle( title_el.find( "a" ).text() );
-				title_el.find( "a" ).text( title );
+				var anchor_el = title_el.find( "a" ).first();
+				var title = fixTitle( anchor_el.text() );
+				var link = linkIdentifier( anchor_el.attr( "href" ) );
+				anchor_el.text( title );
 
 				/* set up user shows */
-				if ( user_shows[ title ] )
+				if ( isUserShow( title, link ) )
 					title_el.parent().addClass( "hrtu_release_page_highlight" );
 				else
 					title_el.parent().removeClass( "hrtu_release_page_highlight" );
@@ -167,13 +298,12 @@ function releasePage() {
 						var title = jQuery(this).parent().find( "a" ).text();
 						var is_saved = jQuery(this).parent().parent().hasClass( "hrtu_release_page_highlight" );
 						if ( is_saved ) {
-							delete user_shows[ title ];
+							removeUserShow( title, link );
 							hrtuSidebarRemoveShow( title );
 						}
 						else
-							user_shows[ title ] = 1;
+							addUserShow( title, link );
 						console.log( user_shows );
-						localStorage.setItem( user_shows_key, JSON.stringify( user_shows ) );
 						releasePage();
 						sideBar();
 						e.stopPropagation();
@@ -181,14 +311,58 @@ function releasePage() {
 				}
 
 				/* set up new show */
-				if ( ! all_shows[ title ] ) {
+				if ( ! isAllShow( title, link ) ) {
 					title_el.parent().addClass( "hrtu_release_page_highlight_new" );
 					if ( ! title_el.find( '.hrtu_release_page_toggle_new' ).length ) {
 						title_el.append( '<div class="hrtu_release_page_toggle_new"></div>' );
 						title_el.on( "click", ".hrtu_release_page_toggle_new", function(e){
 							var title = jQuery(this).parent().find( "a" ).text();
-							all_shows[ title ] = 1
-							localStorage.setItem( all_shows_key, JSON.stringify( all_shows ) );
+							addShow( title, link );
+							releasePage();
+							sideBar();
+							e.stopPropagation();
+						});
+					}
+				}
+				else
+					title_el.parent().removeClass( "hrtu_release_page_highlight_new" );
+			});
+			el.find( '.schedule-show' ).each(function(){
+				var title_el = jQuery(this);
+ 				var title = fixTitle( title_el.text() );
+				title_el.text( title );
+
+				/* set up user shows */
+				if ( isUserShow( title ) )
+					title_el.parent().addClass( "hrtu_release_page_highlight" );
+				else
+					title_el.parent().removeClass( "hrtu_release_page_highlight" );
+				if ( ! title_el.find( '.hrtu_release_page_toggle' ).length ) {
+					title_el.append( '<div class="hrtu_release_page_toggle"></div>' );
+					title_el.on( "click", ".hrtu_release_page_toggle", function(e){
+						var title = jQuery(this).parent().text();
+						var is_saved = jQuery(this).parent().parent().hasClass( "hrtu_release_page_highlight" );
+						if ( is_saved ) {
+							removeUserShow( title );
+							hrtuSidebarRemoveShow( title );
+						}
+						else
+							addUserShow( title );
+						console.log( user_shows );
+						releasePage();
+						sideBar();
+						e.stopPropagation();
+					});
+				}
+
+				/* set up new show */
+				if ( ! isAllShow( title ) ) {
+					title_el.parent().addClass( "hrtu_release_page_highlight_new" );
+					if ( ! title_el.find( '.hrtu_release_page_toggle_new' ).length ) {
+						title_el.append( '<div class="hrtu_release_page_toggle_new"></div>' );
+						title_el.on( "click", ".hrtu_release_page_toggle_new", function(e){
+							var title = jQuery(this).parent().text();
+							addShow( title );
 							releasePage();
 							sideBar();
 							e.stopPropagation();
@@ -432,6 +606,8 @@ function showPage() {
 
 
 /* Userscript Logic */
+
+updateVersion();
 
 addStyles();
 sideBar();
