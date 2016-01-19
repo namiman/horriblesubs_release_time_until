@@ -623,4 +623,4 @@ setInterval( function(){
 	sideBar();
 	if ( window.location.pathname == '/release-schedule/' )
 		releasePage();
-}, 5000 );
+}, 60000 );
