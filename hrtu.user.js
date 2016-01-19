@@ -4,7 +4,7 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.2.3
+// @version      1.2.4
 // @date         2016-01-19
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
@@ -18,7 +18,7 @@ var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
 var version_key = 'hrtu_last_version';
 var is_new_install = false;
-var current_version = '1.2.3';
+var current_version = '1.2.4';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
@@ -65,10 +65,12 @@ function timeAgo( hours, minutes, day ) {
 	var dst_start = new Date( now.getFullYear(), 3, 8 );
 	var dst_end = new Date( now.getFullYear(), 11, 1 );
 	var offset = ( now > dst_start && now < dst_end ) ? -7 : -8 ;
-	var pacific_time = new Date( now.getTime() + offset * 3600 * 1000 );
+	var pacific_time = new Date( now.getTime() + ( offset * 3600 * 1000 ) );
 
 	var time_show = new Date( pacific_time.getFullYear(), pacific_time.getMonth(), pacific_time.getDate(), 0, 0, 0 );
-	var day_diff = ( pacific_time.getDay() === 0 ) ? 0 : ( day - pacific_time.getDay() );
+	var pacific_day = pacific_time.getDay();
+	// if it is sunday(pacific), then the actual day will be 0, but horriblesubs day will be 7, so set it to 0, but only on sundays
+	var day_diff = ( day == 7 && pacific_day == 0 ) ? 0 : ( day - pacific_day );
 		time_show.setDate( pacific_time.getDate() + day_diff );
 		time_show.setHours( parseInt( hours ) + parseInt( offset ) );
 		time_show.setMinutes( minutes );
@@ -218,12 +220,6 @@ function removeUserShow( title, link ) {
 	delete user_shows[ link ];
 	localStorage.setItem( user_shows_key, JSON.stringify( user_shows ) );
 }
-/*
-function isUserShow( title, link ) {
-	console.log( "isUserShow( "+ title +", "+ link +" )" )
-	return ( typeof user_shows[ title ] !== "undefined" ) || ( typeof user_shows[ link ] !== "undefined" );
-}
-*/
 function isUserShow( title, link ) {
 	if ( ( typeof user_shows[ title ] !== "undefined" ) ) {
 		if ( link ) {
