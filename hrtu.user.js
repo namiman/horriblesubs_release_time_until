@@ -4,7 +4,7 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.2.2
+// @version      1.2.3
 // @date         2016-01-19
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
@@ -128,15 +128,18 @@ function sideBar() {
 				var link = linkIdentifier( title_el.find( "a" ).attr( "href" ) );
 				title_el.find( "a" ).text( title );
 			}
+
+			if ( isUserShow( title, link ) )
+				row.addClass( "hrtu_sidebar_highlight" );
+			else
+				row.removeClass( "hrtu_sidebar_highlight" );
+
+			if ( ! isAllShow( title, link ) )
+				row.addClass( "hrtu_sidebar_highlight_new" );
+			else
+				row.removeClass( "hrtu_sidebar_highlight_new" );
 		}
-		if ( isUserShow( title, link ) )
-			row.addClass( "hrtu_sidebar_highlight" );
-		else
-			row.removeClass( "hrtu_sidebar_highlight" );
-		if ( ! isAllShow( title, link ) )
-			row.addClass( "hrtu_sidebar_highlight_new" );
-		else
-			row.removeClass( "hrtu_sidebar_highlight_new" );
+		
 		var time_el = row.find( '.schedule-time' );
 		if ( time_el[0].hasAttribute( 'data-hrtu-time' ) )
 			var time_text = time_el.attr( 'title' );
@@ -620,4 +623,4 @@ setInterval( function(){
 	sideBar();
 	if ( window.location.pathname == '/release-schedule/' )
 		releasePage();
-}, 60000 );
+}, 5000 );
