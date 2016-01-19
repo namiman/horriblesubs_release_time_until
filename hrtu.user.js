@@ -18,7 +18,7 @@ var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
 var version_key = 'hrtu_last_version';
 var is_new_install = false;
-var current_version = '1.2.1';
+var current_version = '1.2.3';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
@@ -39,9 +39,6 @@ function updateVersion() {
 	if ( is_new_install ) {
 		console.log( "HRTU version: "+ current_version );
 	}
-//	else if ( script_version == '0' ) {
-
-//	}
 	localStorage.setItem( version_key, current_version );
 }
 
@@ -162,7 +159,6 @@ function fixTitle( str ) {
 }
 
 function addShow( title, link ) {
-	console.log( "addShow( "+ title +", "+ link +" )" )
 	if ( typeof all_shows[ title ] !== "undefined" ) {
 		if ( link ) {
 			all_shows[ link ] = 1;
@@ -182,7 +178,6 @@ function addShow( title, link ) {
 }
 
 function isAllShow( title, link ) {
-	console.log( "isAllShow( "+ title +", "+ link +" )" );
 	if ( ( typeof all_shows[ title ] !== "undefined" ) ) {
 		if ( link ) {
 			all_shows[ link ] = JSON.parse( JSON.stringify( all_shows[ title ] ) );
@@ -200,7 +195,6 @@ function isAllShow( title, link ) {
 }
 
 function addUserShow( title, link ) {
-	console.log( "addUserShow( "+ title +", "+ link +" )" )
 	if ( typeof user_shows[ title ] !== "undefined" ) {
 		if ( link ) {
 			user_shows[ link ] = 1;
@@ -220,7 +214,6 @@ function addUserShow( title, link ) {
 }
 
 function removeUserShow( title, link ) {
-	console.log( "removeUserShow( "+ title +", "+ link +" )" )
 	delete user_shows[ title ];
 	delete user_shows[ link ];
 	localStorage.setItem( user_shows_key, JSON.stringify( user_shows ) );
@@ -232,7 +225,6 @@ function isUserShow( title, link ) {
 }
 */
 function isUserShow( title, link ) {
-	console.log( "isUserShow( "+ title +", "+ link +" )" );
 	if ( ( typeof user_shows[ title ] !== "undefined" ) ) {
 		if ( link ) {
 			user_shows[ link ] = JSON.parse( JSON.stringify( user_shows[ title ] ) );
@@ -306,7 +298,6 @@ function releasePage() {
 						}
 						else
 							addUserShow( title, link );
-						console.log( user_shows );
 						releasePage();
 						sideBar();
 						e.stopPropagation();
@@ -351,7 +342,6 @@ function releasePage() {
 						}
 						else
 							addUserShow( title );
-						console.log( user_shows );
 						releasePage();
 						sideBar();
 						e.stopPropagation();
@@ -623,4 +613,4 @@ setInterval( function(){
 	sideBar();
 	if ( window.location.pathname == '/release-schedule/' )
 		releasePage();
-}, 60000 );
+}, 5000 );
