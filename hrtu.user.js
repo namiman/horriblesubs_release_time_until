@@ -4,7 +4,7 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.2.4
+// @version      1.2.5
 // @date         2016-01-19
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
@@ -18,7 +18,7 @@ var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
 var version_key = 'hrtu_last_version';
 var is_new_install = false;
-var current_version = '1.2.4';
+var current_version = '1.2.5';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
@@ -150,7 +150,8 @@ function sideBar() {
 		time_el
 			.attr( 'title', time_text )
 			.attr( 'data-hrtu-time', show.time )
-			.text( show.text );
+			.text( show.text )
+			.addClass( 'hrtu_time' );
 		if ( show.direction < 0 )
 			time_el.addClass( 'hrtu_release_page_time_passed' );
 	});
@@ -391,6 +392,7 @@ function releasePage() {
 					.attr( 'title', time_text )
 					.attr( 'data-hrtu-time', show.time )
 					.text( show.text )
+					.addClass( 'hrtu_time' )
 					.parent()
 						.addClass( 'hrtu_series_name' );
 				if ( show.direction < 0 )
@@ -435,7 +437,7 @@ function hrtuSidebarAddShow( title, otime, time_text, href ) {
 			'	<td class="schedule-widget-show hrtu_sidebar_show_name">' +
 			'		<a title="See all releases for this show" href="'+ href +'">'+ title +'</a>' +
 			'	</td>' +
-			'	<td title="'+ otime +'" class="schedule-time '+ color_class +'">'+ time_text +'</td>' +
+			'	<td title="'+ otime +'" class="schedule-time hrtu_time '+ color_class +'">'+ time_text +'</td>' +
 			'</tr>'
 		);
 	}
@@ -510,6 +512,9 @@ function addStyles() {
 		'	}' +
 		'	.hrtu .hrtu_release_page_highlight .hrtu_release_page_time_passed {' +
 		'		color: rgb( 144,144,144 );' +
+		'	}' +
+		'	.hrtu .hrtu_time {' +
+		'		white-space: nowrap;' +
 		'	}' +
 		'	.hrtu .hrtu_release_page_toggle {' +
 		'		width: 24px;' +
