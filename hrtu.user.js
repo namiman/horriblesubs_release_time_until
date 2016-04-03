@@ -4,8 +4,8 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.2.5
-// @date         2016-01-19
+// @version      1.2.6
+// @date         2016-04-03
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
 // @updateURL    https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.meta.js
@@ -18,7 +18,7 @@ var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
 var version_key = 'hrtu_last_version';
 var is_new_install = false;
-var current_version = '1.2.5';
+var current_version = '1.2.6';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
@@ -331,14 +331,16 @@ function releasePage() {
 				if ( ! title_el.find( '.hrtu_release_page_toggle' ).length ) {
 					title_el.append( '<div class="hrtu_release_page_toggle"></div>' );
 					title_el.on( "click", ".hrtu_release_page_toggle", function(e){
-						var title = jQuery(this).parent().text();
-						var is_saved = jQuery(this).parent().parent().hasClass( "hrtu_release_page_highlight" );
+						var el = jQuery(this);
+						var title = el.parent().text();
+						var is_saved = el.parent().parent().hasClass( "hrtu_release_page_highlight" );
 						if ( is_saved ) {
 							removeUserShow( title );
 							hrtuSidebarRemoveShow( title );
 						}
-						else
+						else {
 							addUserShow( title );
+						}
 						releasePage();
 						sideBar();
 						e.stopPropagation();
@@ -399,8 +401,16 @@ function releasePage() {
 					time_el.addClass( 'hrtu_release_page_time_passed' );
 
 				if ( time_el.parent().hasClass( "hrtu_release_page_highlight" ) ) {
-					var title_a = time_el.parent().find( ".schedule-page-show a" );
-					hrtuSidebarAddShow( title_a.text(), show.time, show.text, title_a.attr( 'href' ) );
+					var text_el = time_el.parent().find( ".schedule-page-show a" );
+					if ( ! text_el.length ) {
+						text_el = time_el.parent().find( ".schedule-show" );
+						var href = "";
+					}
+					else {
+						var href = time_el.attr( 'href' );
+					}
+
+					hrtuSidebarAddShow( text_el.text(), show.time, show.text, href );
 				}
 			});
 		}
@@ -431,11 +441,16 @@ function hrtuSidebarAddShow( title, otime, time_text, href ) {
 		}
 	});
 	if ( exists === false ) {
+		var title_text = 'See all releases for this show';
+		if ( ! href ) {
+			href = '';
+			title_text = '';
+		}
 		var color_class = ( /ago/.test( time_text ) ) ? "hrtu_release_page_time_passed" : "" ;
 		jQuery( '#hrtu_sidebar .textwidget .schedule-table tbody' ).append(
 			'<tr>' +
 			'	<td class="schedule-widget-show hrtu_sidebar_show_name">' +
-			'		<a title="See all releases for this show" href="'+ href +'">'+ title +'</a>' +
+			'		<a title="'+ title_text +'" href="'+ href +'">'+ title +'</a>' +
 			'	</td>' +
 			'	<td title="'+ otime +'" class="schedule-time hrtu_time '+ color_class +'">'+ time_text +'</td>' +
 			'</tr>'
@@ -451,7 +466,7 @@ function hrtuSidebarRemoveShow( title ) {
 		}
 	});
 }
-
+/*
 function hrtuSidebarClear() {
 	jQuery( '#hrtu_sidebar .textwidget .schedule-table tbody tr' ).remove();
 }
@@ -470,6 +485,16 @@ function hrtuSidebarRefresh() {
 			el.find( '.schedule-page-show' ).each(function(){
 				var title_el = jQuery(this);
 				var title = title_el.find( "a" ).text();
+				console.log( "shedule-page-show = ["+ title +"]" );
+				if ( user_shows[ title ] )
+					hrtuSidebarAddShow( title );
+				else
+					hrtuSidebarRemoveShow( title );
+			});
+			el.find( '.schedule-show' ).each(function(){
+				var title_el = jQuery(this);
+				var title = title_el.text();
+				console.log( "shedule-show = ["+ title +"]" );
 				if ( user_shows[ title ] )
 					hrtuSidebarAddShow( title );
 				else
@@ -478,7 +503,7 @@ function hrtuSidebarRefresh() {
 		}
 	});
 }
-
+*/
 function addStyles() {
 	// added body class to give us some extra specificity to hopefully override page styles
 	jQuery( 'body' ).addClass( "hrtu" );
@@ -614,4 +639,4 @@ setInterval( function(){
 	sideBar();
 	if ( window.location.pathname == '/release-schedule/' )
 		releasePage();
-}, 5000 );
+}, 30000 );
