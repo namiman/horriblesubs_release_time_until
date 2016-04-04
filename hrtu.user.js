@@ -4,7 +4,7 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.2.7
+// @version      1.2.8
 // @date         2016-04-04
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @grant        none
@@ -16,7 +16,7 @@ var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
 var version_key = 'hrtu_last_version';
 var is_new_install = false;
-var current_version = '1.2.7';
+var current_version = '1.2.8';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
@@ -68,7 +68,7 @@ function timeAgo( hours, minutes, day ) {
 	var time_show = new Date( pacific_time.getFullYear(), pacific_time.getMonth(), pacific_time.getDate(), 0, 0, 0 );
 	var pacific_day = pacific_time.getDay();
 	// if it is sunday(pacific), then the actual day will be 0, but horriblesubs day will be 7, so set it to 0, but only on sundays
-	var day_diff = ( day == 7 && pacific_day == 0 ) ? 0 : ( day - pacific_day );
+	var day_diff = ( day == 7 && pacific_day === 0 ) ? 0 : ( day - pacific_day );
 		time_show.setDate( pacific_time.getDate() + day_diff );
 		time_show.setHours( parseInt( hours ) + parseInt( offset ) );
 		time_show.setMinutes( minutes );
@@ -116,14 +116,14 @@ function sideBar() {
 		if ( ! title_el.hasClass( "hrtu_sidebar_show_name" ) ) {
 			title_el.addClass( "hrtu_sidebar_show_name" );
 		}
+		var title, link;
 		if ( no_link ) {
-			var title = fixTitle( title_el.text() );
-			var link = false;
+			title = fixTitle( title_el.text() );
 			title_el.text( title );
 		}
 		else {
-			var title = fixTitle( title_el.find( "a" ).text() );
-			var link = linkIdentifier( title_el.find( "a" ).attr( "href" ) );
+			title = fixTitle( title_el.find( "a" ).text() );
+			link = linkIdentifier( title_el.find( "a" ).attr( "href" ) );
 			title_el.find( "a" ).text( title );
 		}
 
@@ -136,13 +136,13 @@ function sideBar() {
 			row.addClass( "hrtu_sidebar_highlight_new" );
 		else
 			row.removeClass( "hrtu_sidebar_highlight_new" );
-//		}
 		
 		var time_el = row.find( '.schedule-time' );
+		var time_text;
 		if ( time_el[0].hasAttribute( 'data-hrtu-time' ) )
-			var time_text = time_el.attr( 'title' );
+			time_text = time_el.attr( 'title' );
 		else
-			var time_text = time_el.text();
+			time_text = time_el.text();
 		var match = parseTime( time_text );
 		var today = new Date();
 		var show = timeAgo( match.hours, match.minutes, today.getDay() );
@@ -153,6 +153,25 @@ function sideBar() {
 			.addClass( 'hrtu_time' );
 		if ( show.direction < 0 )
 			time_el.addClass( 'hrtu_release_page_time_passed' );
+	});
+
+	jQuery( ".schedule-today:not( .hrtu_sidebar ) .schedule-table" ).on( "click", ".hrtu_sidebar_highlight_new .hrtu_sidebar_show_name", function( event ){
+		var el = jQuery(this)[0];
+		if ( event.offsetX < el.offsetWidth ) {
+			var anchor_el = jQuery( el ).find( "a" ).first();
+			var title, link;
+			if ( ! anchor_el.length ) {
+				var show_el = jQuery( el ).find( ".schedule-show" );
+				title = fixTitle( show_el.text() );
+			}
+			else {
+				title = fixTitle( anchor_el.text() );
+				link = linkIdentifier( anchor_el.attr( "href" ) );
+			}
+			addShow( title, link );
+			releasePage();
+			sideBar();
+		}
 	});
 }
 
@@ -189,7 +208,7 @@ function isAllShow( title, link ) {
 			all_shows[ title ] = 1;
 		}
 		localStorage.setItem( all_shows_key, JSON.stringify( all_shows ) );
-		return true
+		return true;
 	}
 	else {
 		return ( typeof all_shows[ link ] !== "undefined" );
@@ -230,7 +249,7 @@ function isUserShow( title, link ) {
 			user_shows[ title ] = 1;
 		}
 		localStorage.setItem( user_shows_key, JSON.stringify( user_shows ) );
-		return true
+		return true;
 	}
 	else {
 		return ( typeof user_shows[ link ] !== "undefined" );
@@ -370,6 +389,7 @@ function releasePage() {
 					console.warn( "Horriblesubs Release Time Until releasePage(): No .schedule-time found" );
 					return false;
 				}
+				var time_text;
 				if ( entry_day == 'tbd' || time_el.attr( 'title' ) === "" ) {
 					show = {
 						time: "00:00",
@@ -379,9 +399,9 @@ function releasePage() {
 				}
 				else {
 					if ( time_el[0].hasAttribute( 'data-hrtu-time' ) )
-						var time_text = time_el.attr( 'title' );
+						time_text = time_el.attr( 'title' );
 					else
-						var time_text = time_el.text();
+						time_text = time_el.text();
 					
 					time_el.title = time_text;
 					var match = parseTime( time_text );
@@ -401,12 +421,13 @@ function releasePage() {
 
 				if ( time_el.parent().hasClass( "hrtu_release_page_highlight" ) ) {
 					var text_el = time_el.parent().find( ".schedule-page-show a" );
+					var href;
 					if ( ! text_el.length ) {
 						text_el = time_el.parent().find( ".schedule-show" );
-						var href = "";
+						href = "";
 					}
 					else {
-						var href = time_el.attr( 'href' );
+						href = time_el.attr( 'href' );
 					}
 
 					hrtuSidebarAddShow( text_el.text(), show.time, show.text, href );
@@ -465,46 +486,8 @@ function hrtuSidebarRemoveShow( title ) {
 		}
 	});
 }
-/*
-function hrtuSidebarClear() {
-	jQuery( '#hrtu_sidebar .textwidget .schedule-table tbody tr' ).remove();
-}
 
-function hrtuSidebarRefresh() {
-	if ( ! jQuery( '.entry-content' ).length || ! jQuery( '.entry-content' ).children().length ) {
-		console.warn( "Horriblesubs Release Time Until hrtuSidebarRefresh(): Unable to find release entries" );
-		return false;
-	}
-
-	hrtuSidebarClear();
-
-	jQuery( '.entry-content' ).children().each( function(){
-		var el = jQuery(this);
-		if ( el.hasClass( 'schedule-today-table' ) ) {
-			el.find( '.schedule-page-show' ).each(function(){
-				var title_el = jQuery(this);
-				var title = title_el.find( "a" ).text();
-				console.log( "shedule-page-show = ["+ title +"]" );
-				if ( user_shows[ title ] )
-					hrtuSidebarAddShow( title );
-				else
-					hrtuSidebarRemoveShow( title );
-			});
-			el.find( '.schedule-show' ).each(function(){
-				var title_el = jQuery(this);
-				var title = title_el.text();
-				console.log( "shedule-show = ["+ title +"]" );
-				if ( user_shows[ title ] )
-					hrtuSidebarAddShow( title );
-				else
-					hrtuSidebarRemoveShow( title );
-			});
-		}
-	});
-}
-*/
 function addStyles() {
-	// added body class to give us some extra specificity to hopefully override page styles
 	jQuery( 'body' ).addClass( "hrtu" );
 	jQuery( 'head' ).append(
 		'<style type="text/css">' +
@@ -522,7 +505,6 @@ function addStyles() {
 		'		color: rgb( 0,0,0 );' +
 		'	}' +
 		'	.hrtu .hrtu_sidebar_highlight_new {' +
-		'		background-color: rgb( 255,255,0 );' +
 		'		color: rgb( 0,0,0 );' +
 		'	}' +
 		'	.hrtu .hrtu_release_page_time_passed {' +
@@ -530,6 +512,15 @@ function addStyles() {
 		'	}' +
 		'	.hrtu .hrtu_sidebar_highlight .hrtu_release_page_time_passed {' +
 		'		color: rgb( 129,129,129 );' +
+		'	}' +
+		'	.hrtu .hrtu_sidebar_highlight_new .hrtu_sidebar_show_name:before {' +
+		'		content: "[NEW]";' +
+		'		font-size: 12px;' +
+		'		font-weight: bold;' +
+		'		font-family: sans-serif;' +
+		'		color: rgb( 220,0,0 );' +
+   		'		margin-right: 5px;' +
+   		'		cursor: pointer;' +
 		'	}' +
 		'	.hrtu .hrtu_release_page_highlight {' +
 		'		background-color: rgb( 214,226,243 );' +
@@ -555,15 +546,13 @@ function addStyles() {
 		'		cursor: pointer;' +
 		'		display: inline-block;' +
 		'		margin-left: 7px;' +
+		'		color: rgb( 220,0,0 );' +
 		'	}' +
 		'	.hrtu .hrtu_release_page_toggle:before {' +
 		'		content: "[+]";' +
 		'	}' +
 		'	.hrtu .hrtu_release_page_highlight .hrtu_release_page_toggle:before {' +
 		'		content: "[-]";' +
-		'	}' +
-		'	.hrtu .hrtu_release_page_highlight_new {' +
-		'		background-color: rgb( 255,255,0 )' +
 		'	}' +
 		'	.hrtu .hrtu_release_page_highlight_new .hrtu_release_page_toggle_new:before {' +
 		'		content: "[NEW]";' +
