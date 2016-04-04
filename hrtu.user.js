@@ -4,11 +4,9 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.2.6
-// @date         2016-04-03
+// @version      1.2.7
+// @date         2016-04-04
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
-// @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
-// @updateURL    https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.meta.js
 // @grant        none
 // ==/UserScript==
 
@@ -18,7 +16,7 @@ var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
 var version_key = 'hrtu_last_version';
 var is_new_install = false;
-var current_version = '1.2.6';
+var current_version = '1.2.7';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
@@ -117,27 +115,28 @@ function sideBar() {
 		}
 		if ( ! title_el.hasClass( "hrtu_sidebar_show_name" ) ) {
 			title_el.addClass( "hrtu_sidebar_show_name" );
-			if ( no_link ) {
-				var title = fixTitle( title_el.text() );
-				var link = false;
-				title_el.text( title );
-			}
-			else {
-				var title = fixTitle( title_el.find( "a" ).text() );
-				var link = linkIdentifier( title_el.find( "a" ).attr( "href" ) );
-				title_el.find( "a" ).text( title );
-			}
-
-			if ( isUserShow( title, link ) )
-				row.addClass( "hrtu_sidebar_highlight" );
-			else
-				row.removeClass( "hrtu_sidebar_highlight" );
-
-			if ( ! isAllShow( title, link ) )
-				row.addClass( "hrtu_sidebar_highlight_new" );
-			else
-				row.removeClass( "hrtu_sidebar_highlight_new" );
 		}
+		if ( no_link ) {
+			var title = fixTitle( title_el.text() );
+			var link = false;
+			title_el.text( title );
+		}
+		else {
+			var title = fixTitle( title_el.find( "a" ).text() );
+			var link = linkIdentifier( title_el.find( "a" ).attr( "href" ) );
+			title_el.find( "a" ).text( title );
+		}
+
+		if ( isUserShow( title, link ) )
+			row.addClass( "hrtu_sidebar_highlight" );
+		else
+			row.removeClass( "hrtu_sidebar_highlight" );
+
+		if ( ! isAllShow( title, link ) )
+			row.addClass( "hrtu_sidebar_highlight_new" );
+		else
+			row.removeClass( "hrtu_sidebar_highlight_new" );
+//		}
 		
 		var time_el = row.find( '.schedule-time' );
 		if ( time_el[0].hasAttribute( 'data-hrtu-time' ) )
