@@ -4,8 +4,8 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.2.8
-// @date         2016-04-04
+// @version      1.2.9
+// @date         2016-04-06
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @grant        none
 // ==/UserScript==
@@ -21,21 +21,18 @@ var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
 var all_shows = JSON.parse( localStorage.getItem( all_shows_key ) );
-if ( ! all_shows ) {
+if ( ! all_shows )
 	all_shows = {};
-	is_new_install = true;
-}
 var script_version = localStorage.getItem( version_key );
 if ( ! script_version ) {
-	if ( is_new_install )
-		script_version = current_version;
-	else
-		script_version = '0';
+	is_new_install = true;
+	script_version = current_version;
 }
 
 function updateVersion() {
 	if ( is_new_install ) {
 		console.log( "HRTU version: "+ current_version );
+		showAlert( 'Congratulations on installing <a href="https://github.com/namiman/horriblesubs_release_time_until/">HRTU</a>. You may find instructions on the <a href="/release-schedule/">release schedule</a> page. <div class="close">x</div>' );
 	}
 	localStorage.setItem( version_key, current_version );
 }
@@ -586,6 +583,28 @@ function addStyles() {
 		'	.hrtu_show_outbound_link:last-child {' +
 		'		border: 0px;' +
 		'	}' +
+		'	#hrtu_alert {' +
+		'		position: fixed;' +
+		'		top: 0px;' +
+		'		left: 0px;' +
+		'		background: rgb( 255,0,0 );' +
+		'		padding: 10px;' +
+		'		color: rgb( 255,255,255 );' +
+		'		width: calc( 100% - 20px );' +
+		'		text-align: center;' +
+		'		font-size: 15px;' +
+		'	}' +
+		'	#hrtu_alert a {' +
+		'		color: rgb( 255,255,255 );' +
+		'	}' +
+		'	#hrtu_alert .close {' +
+		'		float: right;' +
+		'		border: 1px solid rgb( 255,255,255 );' +
+		'		border-radius: 10px;' +
+		'		padding: 0px 6px 4px;' +
+		'		line-height: 14px;' +
+		'		cursor: pointer' +
+		'	}' +
 		'</style>'
 	);
 }
@@ -610,6 +629,14 @@ function showPage() {
 	
 }
 
+function showAlert( message ) {
+
+	jQuery( "body" ).append( '<div id="hrtu_alert">'+ message +'</div>' );
+	jQuery( "#hrtu_alert .close" ).click(function(){
+		jQuery(this).parent().slideUp();
+	});
+	
+}
 
 
 /* Userscript Logic */
