@@ -4,9 +4,11 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.2.9
-// @date         2016-04-06
+// @version      1.3.0
+// @date         2016-04-25
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
+// @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
+// @updateURL    https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.meta.js
 // @grant        none
 // ==/UserScript==
 
@@ -16,7 +18,7 @@ var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
 var version_key = 'hrtu_last_version';
 var is_new_install = false;
-var current_version = '1.2.8';
+var current_version = '1.3.0';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
@@ -629,6 +631,24 @@ function showPage() {
 	
 }
 
+function splashPage() {
+
+	waitForElement( ".episodecontainer .latest .release-info", function( element ){
+
+		element.each(function(){
+			var el = jQuery(this).find( "tr" );
+			var link_el = el.find( "td.rls-label a" );
+			if ( ! link_el.length )
+				return true;
+			var link = linkIdentifier( link_el.attr( "href" ) );
+			if ( isUserShow( null, link ) )
+				el.addClass( "hrtu_release_page_highlight" );
+		});
+
+	});
+
+}
+
 function showAlert( message ) {
 
 	jQuery( "body" ).append( '<div id="hrtu_alert">'+ message +'</div>' );
@@ -638,6 +658,22 @@ function showAlert( message ) {
 	
 }
 
+function waitForElement( identifier, callback ) {
+	var found = false;
+	var give_up = 400;
+	var interval = setInterval(function(){
+		var el = jQuery( identifier );
+		if ( el.length ) {
+			clearInterval( interval );
+			callback( el );
+		}
+		else if ( --give_up < 0 ) {
+			clearInterval( interval );
+			callback( false );
+		}
+	}, 300 );
+}
+
 
 /* Userscript Logic */
 
@@ -645,7 +681,9 @@ updateVersion();
 
 addStyles();
 sideBar();
-if ( window.location.pathname == '/release-schedule/' )
+if ( window.location.pathname == '/' )
+	splashPage();
+else if ( window.location.pathname == '/release-schedule/' )
 	releasePage();
 else if ( /\/shows\/./.test( window.location.pathname ) )
 	showPage();
