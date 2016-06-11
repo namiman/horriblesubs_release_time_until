@@ -4,7 +4,7 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.3.2
+// @version      1.3.3
 // @date         2016-06-10
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
@@ -18,7 +18,7 @@ var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
 var version_key = 'hrtu_last_version';
 var is_new_install = false;
-var current_version = '1.3.2';
+var current_version = '1.3.3';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
@@ -524,17 +524,6 @@ function addStyles() {
 		'	}' +
 		'	.hrtu .hrtu_release_page_highlight {' +
 		'		font-weight: bold;' +
-		'	}' +
-		'	.hrtu .hrtu_release_page_highlight .schedule-page-show {' +
-		'		position: relative;' +
-		'		padding-left: 16px;' +
-		'	}' +
-		'	.hrtu .hrtu_release_page_highlight .schedule-page-show:before {' +
-		'		content: "✓";' +
-		'		position: absolute;' +
-		'		top: 0px;' +
-		'		left: 0px;' +
-		'		color: rgb( 0,200,0 );' +
 		'	}' +
 		'	.hrtu .hrtu_release_page_highlight .hrtu_release_page_time_passed {' +
 		'		color: rgb( 144,144,144 );' +
