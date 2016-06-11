@@ -4,7 +4,7 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.3.1
+// @version      1.3.2
 // @date         2016-06-10
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
@@ -18,7 +18,7 @@ var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
 var version_key = 'hrtu_last_version';
 var is_new_install = false;
-var current_version = '1.3.1';
+var current_version = '1.3.2';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
@@ -261,11 +261,12 @@ function releasePage() {
 		return false;
 	}
 
-	if ( ! jQuery( '.hrtu_instructions' ).length )
+	if ( ! jQuery( '.hrtu_instructions' ).length ) {
 		jQuery( jQuery( ".entry-content ul" ).get(0) ).append(
 			'<li class="hrtu_instructions">Click [+] or [-] on shows you\'re watching to highlight them</li>' +
 			'<li class="hrtu_instructions">Shows with [NEW] are newly listed, click on [NEW] to unmark individual shows or <span id="hrtu_unmark_all_new">click&nbsp;here</span> to unmark all of them at once.</li>'
 		);
+	}
 
 	jQuery( '#hrtu_unmark_all_new' ).click(function(){
 		jQuery( '.schedule-page-show' ).each(function(){
@@ -551,12 +552,16 @@ function addStyles() {
 		'		margin-left: 7px;' +
 		'	}' +
 		'	.hrtu .hrtu_release_page_toggle_new {' +
+		'		display: none;' +
 		'		text-align: center;' +
 		'		line-height: 24px;' +
 		'		cursor: pointer;' +
 		'		display: inline-block;' +
 		'		margin-left: 7px;' +
 		'		color: rgb( 220,0,0 );' +
+		'	}' +
+		'	.hrtu .hrtu_release_page_highlight_new .hrtu_release_page_toggle_new {' +
+		'		display: inline-block' +
 		'	}' +
 		'	.hrtu .hrtu_release_page_toggle:before {' +
 		'		content: "[+]";' +
@@ -620,6 +625,84 @@ function addStyles() {
 		'	}' +
 		'</style>'
 	);
+}
+
+function allShowsPage() {
+	console.log( "allShowsPage ["+ jQuery( ".ind-show" ).length +"]" )
+
+	if ( ! jQuery( ".entry-content" ).hasClass( "hrtu_instruction" ) ) {
+
+		jQuery( ".entry-content" )
+			.addClass( "hrtu_instruction" )
+			.prepend(
+				'<ul>' +
+				'	<li class="hrtu_instructions">Click [+] or [-] on shows you\'re watching to highlight them</li>' +
+				'	<li class="hrtu_instructions">Shows with [NEW] are newly listed, click on [NEW] to unmark individual shows or <span id="hrtu_unmark_all_new">click&nbsp;here</span> to unmark all of them at once.</li>' +
+				'</ul>'
+			);
+
+		jQuery( '#hrtu_unmark_all_new' ).click(function(){
+			jQuery( '.ind-show.linkful' ).each(function(){
+				var title_el = jQuery(this);
+				var anchor_el = title_el.find( "a" ).first();
+				var title = fixTitle( anchor_el.text() );
+				var link = linkIdentifier( anchor_el.attr( "href" ) );
+				addShow( title, link );
+				title_el.removeClass( "hrtu_release_page_highlight_new" );
+				sideBar();
+			});
+		});
+
+	}
+
+	jQuery( ".ind-show.linkful" ).each(function(){
+		var title_el = jQuery(this);
+		var anchor_el = title_el.find( "a" ).first();
+		var title = fixTitle( anchor_el.text() );
+		var link = linkIdentifier( anchor_el.attr( "href" ) );
+		anchor_el.text( title );
+
+		if ( isUserShow( title, link ) )
+			title_el.addClass( "hrtu_release_page_highlight" );
+		else
+			title_el.removeClass( "hrtu_release_page_highlight" );
+		if ( ! anchor_el.find( '.hrtu_release_page_toggle' ).length ) {
+			anchor_el.append( '<div class="hrtu_release_page_toggle"></div>' );
+			anchor_el.on( "click", ".hrtu_release_page_toggle", function(e){
+				e.stopImmediatePropagation();
+				e.preventDefault();
+				var is_saved = jQuery(this).parent().parent().hasClass( "hrtu_release_page_highlight" );
+				if ( is_saved ) {
+					removeUserShow( title, link );
+					hrtuSidebarRemoveShow( title );
+					jQuery(this).parent().parent().removeClass( "hrtu_release_page_highlight" );
+				}
+				else {
+					addUserShow( title, link );
+					jQuery(this).parent().parent().addClass( "hrtu_release_page_highlight" );
+				}
+				sideBar();
+			});
+		}
+
+		/* set up new show */
+		if ( ! isAllShow( title, link ) ) {
+			title_el.addClass( "hrtu_release_page_highlight_new" );
+			if ( ! anchor_el.find( '.hrtu_release_page_toggle_new' ).length ) {
+				anchor_el.append( '<div class="hrtu_release_page_toggle_new"></div>' );
+				anchor_el.on( "click", ".hrtu_release_page_toggle_new", function(e){
+					e.stopImmediatePropagation();
+					e.preventDefault();
+					addShow( title, link );
+					jQuery(this).parent().parent().removeClass( "hrtu_release_page_highlight_new" );
+					sideBar();
+				});
+			}
+		}
+		else
+			title_el.removeClass( "hrtu_release_page_highlight_new" );
+	});
+	
 }
 
 function showPage() {
@@ -698,6 +781,8 @@ else if ( window.location.pathname == '/release-schedule/' )
 	releasePage();
 else if ( /\/shows\/./.test( window.location.pathname ) )
 	showPage();
+else if ( /\/(shows|current-season)\/?$/.test( window.location.pathname ) )
+	allShowsPage();
 
 setInterval( function(){
 	sideBar();
