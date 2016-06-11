@@ -4,8 +4,8 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.3.0
-// @date         2016-04-25
+// @version      1.3.1
+// @date         2016-06-10
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
 // @updateURL    https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.meta.js
@@ -18,7 +18,7 @@ var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
 var version_key = 'hrtu_last_version';
 var is_new_install = false;
-var current_version = '1.3.0';
+var current_version = '1.3.1';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
@@ -500,8 +500,8 @@ function addStyles() {
 		'		width: 60%;' +
 		'	}' +
 		'	.hrtu .hrtu_sidebar_highlight {' +
-		'		background-color: rgb( 191,209,236 );' +
 		'		color: rgb( 0,0,0 );' +
+		'		font-weight: bold;' +
 		'	}' +
 		'	.hrtu .hrtu_sidebar_highlight_new {' +
 		'		color: rgb( 0,0,0 );' +
@@ -518,11 +518,22 @@ function addStyles() {
 		'		font-weight: bold;' +
 		'		font-family: sans-serif;' +
 		'		color: rgb( 220,0,0 );' +
-   		'		margin-right: 5px;' +
-   		'		cursor: pointer;' +
+		'		margin-right: 5px;' +
+		'		cursor: pointer;' +
 		'	}' +
 		'	.hrtu .hrtu_release_page_highlight {' +
-		'		background-color: rgb( 214,226,243 );' +
+		'		font-weight: bold;' +
+		'	}' +
+		'	.hrtu .hrtu_release_page_highlight .schedule-page-show {' +
+		'		position: relative;' +
+		'		padding-left: 16px;' +
+		'	}' +
+		'	.hrtu .hrtu_release_page_highlight .schedule-page-show:before {' +
+		'		content: "✓";' +
+		'		position: absolute;' +
+		'		top: 0px;' +
+		'		left: 0px;' +
+		'		color: rgb( 0,200,0 );' +
 		'	}' +
 		'	.hrtu .hrtu_release_page_highlight .hrtu_release_page_time_passed {' +
 		'		color: rgb( 144,144,144 );' +
