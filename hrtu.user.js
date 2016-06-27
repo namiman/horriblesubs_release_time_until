@@ -4,8 +4,8 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.3.3
-// @date         2016-06-10
+// @version      1.3.4
+// @date         2016-06-27
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
 // @updateURL    https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.meta.js
@@ -18,7 +18,7 @@ var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
 var version_key = 'hrtu_last_version';
 var is_new_install = false;
-var current_version = '1.3.3';
+var current_version = '1.3.4';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
@@ -80,10 +80,10 @@ function timeAgo( hours, minutes, day ) {
 		time_units = '';
 	else if ( time_until > 60 ) {
 		time_until = ( time_until / 60 ).toFixed( 1 );
-		time_units = ( time_until > 1 ) ? 'hours' : 'hour';
+		time_units = ( time_until > 1 ) ? 'hrs' : 'hr';
 	}
 	else
-		time_units = ( time_until > 1 ) ? 'minutes' : 'minute';
+		time_units = ( time_until > 1 ) ? 'mins' : 'min';
 
 	var ending_phrase = (time_direction > 0) ? 'until' : (time_direction === 0) ? 'now' : 'ago';
 
@@ -174,6 +174,11 @@ function sideBar() {
 	});
 }
 
+/*
+	Fixes bug where titles had differing types of dashes,
+	in different places on the website, and as a result
+	would not match against each other.
+*/
 function fixTitle( str ) {
 	return str.replace( /\u2013|\u002D/g, "-" );
 }
@@ -415,7 +420,9 @@ function releasePage() {
 					.text( show.text )
 					.addClass( 'hrtu_time' )
 					.parent()
-						.addClass( 'hrtu_series_name' );
+						.addClass( 'hrtu_series_name' )
+						.find( '.schedule-page-show' )
+							.addClass( 'hrtu_series_name_text' );
 				if ( show.direction < 0 )
 					time_el.addClass( 'hrtu_release_page_time_passed' );
 
@@ -468,7 +475,7 @@ function hrtuSidebarAddShow( title, otime, time_text, href ) {
 		}
 		var color_class = ( /ago/.test( time_text ) ) ? "hrtu_release_page_time_passed" : "" ;
 		jQuery( '#hrtu_sidebar .textwidget .schedule-table tbody' ).append(
-			'<tr>' +
+			'<tr class="hrtu_sidebar_highlight">' +
 			'	<td class="schedule-widget-show hrtu_sidebar_show_name">' +
 			'		<a title="'+ title_text +'" href="'+ href +'">'+ title +'</a>' +
 			'	</td>' +
@@ -497,12 +504,29 @@ function addStyles() {
 		'	.hrtu .hrtu_series_name:hover {' +
 		'		background-color: rgb( 230,230,230 );' +
 		'	}' +
+		'	.hrtu .hrtu_series_name_text {' +
+		'		overflow: visible;' +
+		'		white-space: normal;' +
+		'	}' +
 		'	.hrtu .hrtu_sidebar_show_name {' +
 		'		width: 60%;' +
+		'		position: relative;' +
+		'		overflow: visible;' +
+		'		white-space: normal;' +
 		'	}' +
 		'	.hrtu .hrtu_sidebar_highlight {' +
 		'		color: rgb( 0,0,0 );' +
 		'		font-weight: bold;' +
+		'	}' +
+		'	.hrtu .hrtu_sidebar_highlight .hrtu_sidebar_show_name:before {' +
+		'		content: "";' +
+		'		position: absolute;' +
+		'		top: 6px;' +
+		'		left: -10px;' +
+		'		width: 6px;' +
+		'		height: 6px;' +
+		'		border-radius: 15px;' +
+		'		background: rgb( 76,113,168 );' +
 		'	}' +
 		'	.hrtu .hrtu_sidebar_highlight_new {' +
 		'		color: rgb( 0,0,0 );' +
@@ -524,6 +548,19 @@ function addStyles() {
 		'	}' +
 		'	.hrtu .hrtu_release_page_highlight {' +
 		'		font-weight: bold;' +
+		'	}' +
+		'	.hrtu .hrtu_release_page_highlight .hrtu_series_name_text {' +
+		'		position: relative;' +
+		'	}' +
+		'	.hrtu .hrtu_release_page_highlight .hrtu_series_name_text:before {' +
+		'		content: "";' +
+		'		position: absolute;' +
+		'		top: 9px;' +
+		'		left: -14px;' +
+		'		width: 9px;' +
+		'		height: 9px;' +
+		'		border-radius: 15px;' +
+		'		background: rgb( 98,151,176 );' +
 		'	}' +
 		'	.hrtu .hrtu_release_page_highlight .hrtu_release_page_time_passed {' +
 		'		color: rgb( 144,144,144 );' +
@@ -612,13 +649,14 @@ function addStyles() {
 		'		line-height: 14px;' +
 		'		cursor: pointer' +
 		'	}' +
+		'	.hrtu_sidebar  .hrtu_sidebar_highlight .hrtu_sidebar_show_name:before {' +
+		'		display: none;' +
+		'	}' +
 		'</style>'
 	);
 }
 
 function allShowsPage() {
-	console.log( "allShowsPage ["+ jQuery( ".ind-show" ).length +"]" )
-
 	if ( ! jQuery( ".entry-content" ).hasClass( "hrtu_instruction" ) ) {
 
 		jQuery( ".entry-content" )
