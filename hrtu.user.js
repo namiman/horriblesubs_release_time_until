@@ -4,8 +4,8 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.3.4
-// @date         2016-06-27
+// @version      1.3.5
+// @date         2016-07-03
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
 // @updateURL    https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.meta.js
@@ -18,7 +18,7 @@ var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
 var version_key = 'hrtu_last_version';
 var is_new_install = false;
-var current_version = '1.3.4';
+var current_version = '1.3.5';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
@@ -236,6 +236,9 @@ function addUserShow( title, link ) {
 			user_shows[ title ] = 1;
 	}
 	localStorage.setItem( user_shows_key, JSON.stringify( user_shows ) );
+
+	if ( ! isAllShow( title, link ) )
+		addShow( title, link );
 }
 
 function removeUserShow( title, link ) {
@@ -307,6 +310,7 @@ function releasePage() {
 					title_el.parent().addClass( "hrtu_release_page_highlight" );
 				else
 					title_el.parent().removeClass( "hrtu_release_page_highlight" );
+
 				if ( ! title_el.find( '.hrtu_release_page_toggle' ).length ) {
 					title_el.append( '<div class="hrtu_release_page_toggle"></div>' );
 					title_el.on( "click", ".hrtu_release_page_toggle", function(e){
@@ -361,9 +365,8 @@ function releasePage() {
 							removeUserShow( title );
 							hrtuSidebarRemoveShow( title );
 						}
-						else {
+						else
 							addUserShow( title );
-						}
 						releasePage();
 						sideBar();
 						e.stopPropagation();
@@ -505,6 +508,7 @@ function addStyles() {
 		'		background-color: rgb( 230,230,230 );' +
 		'	}' +
 		'	.hrtu .hrtu_series_name_text {' +
+		'		position: relative;' +
 		'		overflow: visible;' +
 		'		white-space: normal;' +
 		'	}' +
@@ -518,7 +522,7 @@ function addStyles() {
 		'		color: rgb( 0,0,0 );' +
 		'		font-weight: bold;' +
 		'	}' +
-		'	.hrtu .hrtu_sidebar_highlight .hrtu_sidebar_show_name:before {' +
+		'	.hrtu .hrtu_sidebar_highlight .hrtu_sidebar_show_name:before, .hrtu .hrtu_sidebar_highlight_new .hrtu_sidebar_show_name:after {' +
 		'		content: "";' +
 		'		position: absolute;' +
 		'		top: 6px;' +
@@ -527,6 +531,9 @@ function addStyles() {
 		'		height: 6px;' +
 		'		border-radius: 15px;' +
 		'		background: rgb( 76,113,168 );' +
+		'	}' +
+		'	.hrtu .hrtu_sidebar_highlight_new .hrtu_sidebar_show_name:after {' +
+		'		background: rgb( 220,0,0 );' +
 		'	}' +
 		'	.hrtu .hrtu_sidebar_highlight_new {' +
 		'		color: rgb( 0,0,0 );' +
@@ -598,6 +605,16 @@ function addStyles() {
 		'	.hrtu .hrtu_release_page_highlight_new .hrtu_release_page_toggle_new:before {' +
 		'		content: "[NEW]";' +
 		'		font-weight: bold;' +
+		'	}' +
+		'	.hrtu .hrtu_release_page_highlight_new .hrtu_series_name_text:after {' +
+		'		content: "";' +
+		'		position: absolute;' +
+		'		top: 9px;' +
+		'		left: -14px;' +
+		'		width: 9px;' +
+		'		height: 9px;' +
+		'		border-radius: 15px;' +
+		'		background: rgb( 220,0,0 );' +
 		'	}' +
 		'	#hrtu_unmark_all_new {' +
 		'		height: 22px;' +
