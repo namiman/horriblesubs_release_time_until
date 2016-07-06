@@ -4,8 +4,8 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.3.5
-// @date         2016-07-03
+// @version      1.3.6
+// @date         2016-07-05
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
 // @updateURL    https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.meta.js
@@ -18,7 +18,7 @@ var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
 var version_key = 'hrtu_last_version';
 var is_new_install = false;
-var current_version = '1.3.5';
+var current_version = '1.3.6';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
@@ -425,6 +425,10 @@ function releasePage() {
 					.parent()
 						.addClass( 'hrtu_series_name' )
 						.find( '.schedule-page-show' )
+							.addClass( 'hrtu_series_name_text' );
+				time_el
+					.parent()
+						.find( '.schedule-show' )
 							.addClass( 'hrtu_series_name_text' );
 				if ( show.direction < 0 )
 					time_el.addClass( 'hrtu_release_page_time_passed' );
