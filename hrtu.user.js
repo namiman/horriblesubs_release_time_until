@@ -4,8 +4,8 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.3.6
-// @date         2016-07-05
+// @version      1.3.7
+// @date         2016-10-10
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
 // @updateURL    https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.meta.js
@@ -154,7 +154,7 @@ function sideBar() {
 			time_el.addClass( 'hrtu_release_page_time_passed' );
 	});
 
-	jQuery( ".schedule-today:not( .hrtu_sidebar ) .schedule-table" ).on( "click", ".hrtu_sidebar_highlight_new .hrtu_sidebar_show_name", function( event ){
+	jQuery( ".schedule-today:not( .hrtu_sidebar ) .schedule-table" ).unbind( "click" ).on( "click", ".hrtu_sidebar_highlight_new .hrtu_sidebar_show_name", function( event ){
 		var el = jQuery(this)[0];
 		if ( event.offsetX < el.offsetWidth ) {
 			var anchor_el = jQuery( el ).find( "a" ).first();
@@ -276,7 +276,7 @@ function releasePage() {
 		);
 	}
 
-	jQuery( '#hrtu_unmark_all_new' ).click(function(){
+	jQuery( '#hrtu_unmark_all_new' ).unbind( "click" ).click(function(){
 		jQuery( '.schedule-page-show' ).each(function(){
 			var anchor_el = jQuery(this).find( "a" ).first();
 			var title = fixTitle( anchor_el.text() );
@@ -313,7 +313,7 @@ function releasePage() {
 
 				if ( ! title_el.find( '.hrtu_release_page_toggle' ).length ) {
 					title_el.append( '<div class="hrtu_release_page_toggle"></div>' );
-					title_el.on( "click", ".hrtu_release_page_toggle", function(e){
+					title_el.unbind( "click" ).on( "click", ".hrtu_release_page_toggle", function(e){
 						var title = jQuery(this).parent().find( "a" ).text();
 						var is_saved = jQuery(this).parent().parent().hasClass( "hrtu_release_page_highlight" );
 						if ( is_saved ) {
@@ -333,7 +333,7 @@ function releasePage() {
 					title_el.parent().addClass( "hrtu_release_page_highlight_new" );
 					if ( ! title_el.find( '.hrtu_release_page_toggle_new' ).length ) {
 						title_el.append( '<div class="hrtu_release_page_toggle_new"></div>' );
-						title_el.on( "click", ".hrtu_release_page_toggle_new", function(e){
+						title_el.unbind( "click" ).on( "click", ".hrtu_release_page_toggle_new", function(e){
 							var title = jQuery(this).parent().find( "a" ).text();
 							addShow( title, link );
 							releasePage();
@@ -357,7 +357,7 @@ function releasePage() {
 					title_el.parent().removeClass( "hrtu_release_page_highlight" );
 				if ( ! title_el.find( '.hrtu_release_page_toggle' ).length ) {
 					title_el.append( '<div class="hrtu_release_page_toggle"></div>' );
-					title_el.on( "click", ".hrtu_release_page_toggle", function(e){
+					title_el.unbind( "click" ).on( "click", ".hrtu_release_page_toggle", function(e){
 						var el = jQuery(this);
 						var title = el.parent().text();
 						var is_saved = el.parent().parent().hasClass( "hrtu_release_page_highlight" );
@@ -378,7 +378,7 @@ function releasePage() {
 					title_el.parent().addClass( "hrtu_release_page_highlight_new" );
 					if ( ! title_el.find( '.hrtu_release_page_toggle_new' ).length ) {
 						title_el.append( '<div class="hrtu_release_page_toggle_new"></div>' );
-						title_el.on( "click", ".hrtu_release_page_toggle_new", function(e){
+						title_el.unbind( "click" ).on( "click", ".hrtu_release_page_toggle_new", function(e){
 							var title = jQuery(this).parent().text();
 							addShow( title );
 							releasePage();
@@ -689,7 +689,7 @@ function allShowsPage() {
 				'</ul>'
 			);
 
-		jQuery( '#hrtu_unmark_all_new' ).click(function(){
+		jQuery( '#hrtu_unmark_all_new' ).unbind( "click" ).click(function(){
 			jQuery( '.ind-show.linkful' ).each(function(){
 				var title_el = jQuery(this);
 				var anchor_el = title_el.find( "a" ).first();
@@ -716,7 +716,7 @@ function allShowsPage() {
 			title_el.removeClass( "hrtu_release_page_highlight" );
 		if ( ! anchor_el.find( '.hrtu_release_page_toggle' ).length ) {
 			anchor_el.append( '<div class="hrtu_release_page_toggle"></div>' );
-			anchor_el.on( "click", ".hrtu_release_page_toggle", function(e){
+			anchor_el.unbind( "click" ).on( "click", ".hrtu_release_page_toggle", function(e){
 				e.stopImmediatePropagation();
 				e.preventDefault();
 				var is_saved = jQuery(this).parent().parent().hasClass( "hrtu_release_page_highlight" );
@@ -738,7 +738,7 @@ function allShowsPage() {
 			title_el.addClass( "hrtu_release_page_highlight_new" );
 			if ( ! anchor_el.find( '.hrtu_release_page_toggle_new' ).length ) {
 				anchor_el.append( '<div class="hrtu_release_page_toggle_new"></div>' );
-				anchor_el.on( "click", ".hrtu_release_page_toggle_new", function(e){
+				anchor_el.unbind( "click" ).on( "click", ".hrtu_release_page_toggle_new", function(e){
 					e.stopImmediatePropagation();
 					e.preventDefault();
 					addShow( title, link );
@@ -794,7 +794,7 @@ function splashPage() {
 function showAlert( message ) {
 
 	jQuery( "body" ).append( '<div id="hrtu_alert">'+ message +'</div>' );
-	jQuery( "#hrtu_alert .close" ).click(function(){
+	jQuery( "#hrtu_alert .close" ).unbind( "click" ).click(function(){
 		jQuery(this).parent().slideUp();
 	});
 	
