@@ -4,7 +4,7 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.3.8
+// @version      1.3.9
 // @date         2016-10-11
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
@@ -18,7 +18,7 @@ var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
 var version_key = 'hrtu_last_version';
 var is_new_install = false;
-var current_version = '1.3.8';
+var current_version = '1.3.9';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
@@ -203,7 +203,6 @@ function addShow( title, link ) {
 }
 
 function isAllShow( title, link ) {
-	console.log( "isAllShow( ["+ title +"], ["+ link +"] )" )
 	if ( ( typeof all_shows[ title ] !== "undefined" ) ) {
 		if ( link ) {
 			all_shows[ link ] = JSON.parse( JSON.stringify( all_shows[ title ] ) );
@@ -221,7 +220,6 @@ function isAllShow( title, link ) {
 }
 
 function addUserShow( title, link ) {
-	console.log( "addUserShow( ["+ title +"], ["+ link +"] )" )
 	if ( typeof user_shows[ title ] !== "undefined" ) {
 		if ( link ) {
 			user_shows[ link ] = 1;
@@ -266,14 +264,8 @@ function isUserShow( title, link ) {
 }
 
 function releasePageUserRefreshShowView( el, title, link, is_user_saved, is_all_saved ) {
-	console.log( "releasePageUserRefreshShowView" )
-	console.log( "["+ title +"], ["+ link +"], ["+ is_user_saved +"], ["+ is_all_saved +"]" )
 	var has_link = el.hasClass( "schedule-page-show" );
-//	title = title || ( has_link ) ? el.find( "a" ).text() : el.text();
-//	link = link || ( has_link ) ? linkIdentifier( el.find( "a" ).attr( "href" ) ) : false;
-//	is_user_saved = is_user_saved || isUserShow( title, link );
 	is_all_saved = is_all_saved || isAllShow( title, link );
-	console.log( "["+ title +"], ["+ link +"], ["+ is_user_saved +"], ["+ is_all_saved +"]" )
 
 	if ( is_user_saved )
 		el.parent().addClass( "hrtu_release_page_highlight" );
@@ -315,13 +307,11 @@ function releasePageMakeShow( title_el, has_link ) {
 		title_el.append( '<div class="hrtu_release_page_toggle"></div>' );
 
 		title_el.unbind( "click.hrtu_release_page_toggle" ).on( "click.hrtu_release_page_toggle", ".hrtu_release_page_toggle", function(e){
-			console.log( "click" )
 			var el = jQuery(this),
 				title,
 				link;
 
 			var has_link = el.parent().hasClass( "schedule-page-show" );
-			console.log( "has_link "+ has_link )
 
 			if ( has_link ) {
 				title = el.parent().find( "a" ).text();
@@ -331,7 +321,6 @@ function releasePageMakeShow( title_el, has_link ) {
 				title = el.parent().text();
 
 			var is_saved = el.parent().parent().hasClass( "hrtu_release_page_highlight" );
-			console.log( "is_saved "+ is_saved )
 			if ( is_saved ) {
 				removeUserShow( title, link );
 				hrtuSidebarRemoveShow( title );
@@ -342,8 +331,6 @@ function releasePageMakeShow( title_el, has_link ) {
 				releasePageUserRefreshShowView( el.parent(), title, link, true );
 			}
 
-			//releasePage();
-			//releasePageUserRefreshShowView( el.parent(), title, link );
 			sideBar();
 			e.stopPropagation();
 		});
@@ -369,12 +356,12 @@ function releasePageMakeShow( title_el, has_link ) {
 					title = el.parent().find( "a" ).text();
 					link = linkIdentifier( el.parent().find( "a" ).attr( "href" ) );
 				}
-				else
+				else {
 					title = el.parent().text();
+				}
 
-				addShow( title, link );
-				//releasePage();
-				releasePageUserRefreshShowView( el, title, link );
+				addShow( title, link );	
+				releasePageUserRefreshShowView( el.parent(), title, link, isUserShow( title, link ) );			
 				sideBar();
 				e.stopPropagation();
 			});
