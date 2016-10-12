@@ -4,8 +4,8 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.3.7
-// @date         2016-10-10
+// @version      1.3.8
+// @date         2016-10-11
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
 // @updateURL    https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.meta.js
@@ -18,7 +18,7 @@ var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
 var version_key = 'hrtu_last_version';
 var is_new_install = false;
-var current_version = '1.3.7';
+var current_version = '1.3.8';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
@@ -154,7 +154,7 @@ function sideBar() {
 			time_el.addClass( 'hrtu_release_page_time_passed' );
 	});
 
-	jQuery( ".schedule-today:not( .hrtu_sidebar ) .schedule-table" ).unbind( "click" ).on( "click", ".hrtu_sidebar_highlight_new .hrtu_sidebar_show_name", function( event ){
+	jQuery( ".schedule-today:not( .hrtu_sidebar ) .schedule-table" ).unbind( "click.hrtu_sidebar_show_name" ).on( "click.hrtu_sidebar_show_name", ".hrtu_sidebar_highlight_new .hrtu_sidebar_show_name", function( event ){
 		var el = jQuery(this)[0];
 		if ( event.offsetX < el.offsetWidth ) {
 			var anchor_el = jQuery( el ).find( "a" ).first();
@@ -203,6 +203,7 @@ function addShow( title, link ) {
 }
 
 function isAllShow( title, link ) {
+	console.log( "isAllShow( ["+ title +"], ["+ link +"] )" )
 	if ( ( typeof all_shows[ title ] !== "undefined" ) ) {
 		if ( link ) {
 			all_shows[ link ] = JSON.parse( JSON.stringify( all_shows[ title ] ) );
@@ -220,6 +221,7 @@ function isAllShow( title, link ) {
 }
 
 function addUserShow( title, link ) {
+	console.log( "addUserShow( ["+ title +"], ["+ link +"] )" )
 	if ( typeof user_shows[ title ] !== "undefined" ) {
 		if ( link ) {
 			user_shows[ link ] = 1;
@@ -263,6 +265,125 @@ function isUserShow( title, link ) {
 	}
 }
 
+function releasePageUserRefreshShowView( el, title, link, is_user_saved, is_all_saved ) {
+	console.log( "releasePageUserRefreshShowView" )
+	console.log( "["+ title +"], ["+ link +"], ["+ is_user_saved +"], ["+ is_all_saved +"]" )
+	var has_link = el.hasClass( "schedule-page-show" );
+//	title = title || ( has_link ) ? el.find( "a" ).text() : el.text();
+//	link = link || ( has_link ) ? linkIdentifier( el.find( "a" ).attr( "href" ) ) : false;
+//	is_user_saved = is_user_saved || isUserShow( title, link );
+	is_all_saved = is_all_saved || isAllShow( title, link );
+	console.log( "["+ title +"], ["+ link +"], ["+ is_user_saved +"], ["+ is_all_saved +"]" )
+
+	if ( is_user_saved )
+		el.parent().addClass( "hrtu_release_page_highlight" );
+	else
+		el.parent().removeClass( "hrtu_release_page_highlight" );
+
+	if ( is_all_saved )
+		el.parent().removeClass( "hrtu_release_page_highlight_new" );
+	else
+		el.parent().addClass( "hrtu_release_page_highlight_new" );
+
+}
+
+function releasePageMakeShow( title_el, has_link ) {
+
+	var anchor_el,
+		link,
+		title;
+
+	if ( has_link ) {
+		anchor_el = title_el.find( "a" ).first();
+		link = linkIdentifier( anchor_el.attr( "href" ) );
+		title = fixTitle( anchor_el.text() );
+		anchor_el.text( title );
+	}
+	else {
+		title = fixTitle( title_el.text() );
+		title_el.text( title );
+	}
+
+	/* set up user shows */
+	if ( isUserShow( title, link ) )
+		title_el.parent().addClass( "hrtu_release_page_highlight" );
+	else
+		title_el.parent().removeClass( "hrtu_release_page_highlight" );
+
+	if ( ! title_el.find( '.hrtu_release_page_toggle' ).length ) {
+
+		title_el.append( '<div class="hrtu_release_page_toggle"></div>' );
+
+		title_el.unbind( "click.hrtu_release_page_toggle" ).on( "click.hrtu_release_page_toggle", ".hrtu_release_page_toggle", function(e){
+			console.log( "click" )
+			var el = jQuery(this),
+				title,
+				link;
+
+			var has_link = el.parent().hasClass( "schedule-page-show" );
+			console.log( "has_link "+ has_link )
+
+			if ( has_link ) {
+				title = el.parent().find( "a" ).text();
+				link = linkIdentifier( el.parent().find( "a" ).attr( "href" ) );
+			}
+			else
+				title = el.parent().text();
+
+			var is_saved = el.parent().parent().hasClass( "hrtu_release_page_highlight" );
+			console.log( "is_saved "+ is_saved )
+			if ( is_saved ) {
+				removeUserShow( title, link );
+				hrtuSidebarRemoveShow( title );
+				releasePageUserRefreshShowView( el.parent(), title, link, false );
+			}
+			else {
+				addUserShow( title, link );
+				releasePageUserRefreshShowView( el.parent(), title, link, true );
+			}
+
+			//releasePage();
+			//releasePageUserRefreshShowView( el.parent(), title, link );
+			sideBar();
+			e.stopPropagation();
+		});
+	}
+
+	/* set up new show */
+	if ( ! isAllShow( title, link ) ) {
+		title_el.parent().addClass( "hrtu_release_page_highlight_new" );
+
+		if ( ! title_el.find( '.hrtu_release_page_toggle_new' ).length ) {
+
+			title_el.append( '<div class="hrtu_release_page_toggle_new"></div>' );
+
+			title_el.unbind( "click.hrtu_release_page_toggle_new" ).on( "click.hrtu_release_page_toggle_new", ".hrtu_release_page_toggle_new", function(e){
+
+				var title,
+					link,
+					el = jQuery(this);
+
+				var has_link = el.parent().hasClass( "schedule-page-show" );
+
+				if ( has_link ) {
+					title = el.parent().find( "a" ).text();
+					link = linkIdentifier( el.parent().find( "a" ).attr( "href" ) );
+				}
+				else
+					title = el.parent().text();
+
+				addShow( title, link );
+				//releasePage();
+				releasePageUserRefreshShowView( el, title, link );
+				sideBar();
+				e.stopPropagation();
+			});
+		}
+	}
+	else
+		title_el.parent().removeClass( "hrtu_release_page_highlight_new" );
+}
+
 function releasePage() {
 	if ( ! jQuery( '.entry-content' ).length || ! jQuery( '.entry-content' ).children().length ) {
 		console.warn( "Horriblesubs Release Time Until releasePage(): Unable to find release entries" );
@@ -276,7 +397,7 @@ function releasePage() {
 		);
 	}
 
-	jQuery( '#hrtu_unmark_all_new' ).unbind( "click" ).click(function(){
+	jQuery( '#hrtu_unmark_all_new' ).unbind( "click" ).on( "click", function(){
 		jQuery( '.schedule-page-show' ).each(function(){
 			var anchor_el = jQuery(this).find( "a" ).first();
 			var title = fixTitle( anchor_el.text() );
@@ -289,7 +410,6 @@ function releasePage() {
 
 	var entry_day;
 	jQuery( '.entry-content' ).children().each(function(){
-		var time_text = '';
 		var el = jQuery(this);
 		if ( el.hasClass( 'weekday' ) ) {
 			if ( el.text() == "To be scheduled" )
@@ -298,98 +418,15 @@ function releasePage() {
 				entry_day = weekdays.indexOf( el.text() );
 		}
 		else if ( el.hasClass( 'schedule-today-table' ) ) {
+
 			el.find( '.schedule-page-show' ).each(function(){
-				var title_el = jQuery(this);
-				var anchor_el = title_el.find( "a" ).first();
-				var title = fixTitle( anchor_el.text() );
-				var link = linkIdentifier( anchor_el.attr( "href" ) );
-				anchor_el.text( title );
-
-				/* set up user shows */
-				if ( isUserShow( title, link ) )
-					title_el.parent().addClass( "hrtu_release_page_highlight" );
-				else
-					title_el.parent().removeClass( "hrtu_release_page_highlight" );
-
-				if ( ! title_el.find( '.hrtu_release_page_toggle' ).length ) {
-					title_el.append( '<div class="hrtu_release_page_toggle"></div>' );
-					title_el.unbind( "click" ).on( "click", ".hrtu_release_page_toggle", function(e){
-						var title = jQuery(this).parent().find( "a" ).text();
-						var is_saved = jQuery(this).parent().parent().hasClass( "hrtu_release_page_highlight" );
-						if ( is_saved ) {
-							removeUserShow( title, link );
-							hrtuSidebarRemoveShow( title );
-						}
-						else
-							addUserShow( title, link );
-						releasePage();
-						sideBar();
-						e.stopPropagation();
-					});
-				}
-
-				/* set up new show */
-				if ( ! isAllShow( title, link ) ) {
-					title_el.parent().addClass( "hrtu_release_page_highlight_new" );
-					if ( ! title_el.find( '.hrtu_release_page_toggle_new' ).length ) {
-						title_el.append( '<div class="hrtu_release_page_toggle_new"></div>' );
-						title_el.unbind( "click" ).on( "click", ".hrtu_release_page_toggle_new", function(e){
-							var title = jQuery(this).parent().find( "a" ).text();
-							addShow( title, link );
-							releasePage();
-							sideBar();
-							e.stopPropagation();
-						});
-					}
-				}
-				else
-					title_el.parent().removeClass( "hrtu_release_page_highlight_new" );
+				releasePageMakeShow( jQuery(this), true );
 			});
+
 			el.find( '.schedule-show' ).each(function(){
-				var title_el = jQuery(this);
- 				var title = fixTitle( title_el.text() );
-				title_el.text( title );
-
-				/* set up user shows */
-				if ( isUserShow( title ) )
-					title_el.parent().addClass( "hrtu_release_page_highlight" );
-				else
-					title_el.parent().removeClass( "hrtu_release_page_highlight" );
-				if ( ! title_el.find( '.hrtu_release_page_toggle' ).length ) {
-					title_el.append( '<div class="hrtu_release_page_toggle"></div>' );
-					title_el.unbind( "click" ).on( "click", ".hrtu_release_page_toggle", function(e){
-						var el = jQuery(this);
-						var title = el.parent().text();
-						var is_saved = el.parent().parent().hasClass( "hrtu_release_page_highlight" );
-						if ( is_saved ) {
-							removeUserShow( title );
-							hrtuSidebarRemoveShow( title );
-						}
-						else
-							addUserShow( title );
-						releasePage();
-						sideBar();
-						e.stopPropagation();
-					});
-				}
-
-				/* set up new show */
-				if ( ! isAllShow( title ) ) {
-					title_el.parent().addClass( "hrtu_release_page_highlight_new" );
-					if ( ! title_el.find( '.hrtu_release_page_toggle_new' ).length ) {
-						title_el.append( '<div class="hrtu_release_page_toggle_new"></div>' );
-						title_el.unbind( "click" ).on( "click", ".hrtu_release_page_toggle_new", function(e){
-							var title = jQuery(this).parent().text();
-							addShow( title );
-							releasePage();
-							sideBar();
-							e.stopPropagation();
-						});
-					}
-				}
-				else
-					title_el.parent().removeClass( "hrtu_release_page_highlight_new" );
+				releasePageMakeShow( jQuery(this), false );
 			});
+
 			el.find( '.schedule-time' ).each(function(){
 				var show;
 				var time_el = jQuery(this);
@@ -689,7 +726,7 @@ function allShowsPage() {
 				'</ul>'
 			);
 
-		jQuery( '#hrtu_unmark_all_new' ).unbind( "click" ).click(function(){
+		jQuery( '#hrtu_unmark_all_new' ).unbind( "click" ).on( "click", function(){
 			jQuery( '.ind-show.linkful' ).each(function(){
 				var title_el = jQuery(this);
 				var anchor_el = title_el.find( "a" ).first();
@@ -716,7 +753,7 @@ function allShowsPage() {
 			title_el.removeClass( "hrtu_release_page_highlight" );
 		if ( ! anchor_el.find( '.hrtu_release_page_toggle' ).length ) {
 			anchor_el.append( '<div class="hrtu_release_page_toggle"></div>' );
-			anchor_el.unbind( "click" ).on( "click", ".hrtu_release_page_toggle", function(e){
+			anchor_el.unbind( "click.hrtu_release_page_toggle" ).on( "click.hrtu_release_page_toggle", ".hrtu_release_page_toggle", function(e){
 				e.stopImmediatePropagation();
 				e.preventDefault();
 				var is_saved = jQuery(this).parent().parent().hasClass( "hrtu_release_page_highlight" );
@@ -738,7 +775,7 @@ function allShowsPage() {
 			title_el.addClass( "hrtu_release_page_highlight_new" );
 			if ( ! anchor_el.find( '.hrtu_release_page_toggle_new' ).length ) {
 				anchor_el.append( '<div class="hrtu_release_page_toggle_new"></div>' );
-				anchor_el.unbind( "click" ).on( "click", ".hrtu_release_page_toggle_new", function(e){
+				anchor_el.unbind( "click.hrtu_release_page_toggle_new" ).on( "click.hrtu_release_page_toggle_new", ".hrtu_release_page_toggle_new", function(e){
 					e.stopImmediatePropagation();
 					e.preventDefault();
 					addShow( title, link );
@@ -794,14 +831,13 @@ function splashPage() {
 function showAlert( message ) {
 
 	jQuery( "body" ).append( '<div id="hrtu_alert">'+ message +'</div>' );
-	jQuery( "#hrtu_alert .close" ).unbind( "click" ).click(function(){
+	jQuery( "#hrtu_alert .close" ).unbind( "click" ).on( "click", function(){
 		jQuery(this).parent().slideUp();
 	});
 	
 }
 
 function waitForElement( identifier, callback ) {
-	var found = false;
 	var give_up = 400;
 	var interval = setInterval(function(){
 		var el = jQuery( identifier );
