@@ -4,11 +4,9 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.3.9
-// @date         2016-10-11
+// @version      1.4.0
+// @date         2017-02-26
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
-// @downloadURL  https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.user.js
-// @updateURL    https://raw.githubusercontent.com/namiman/horriblesubs_release_time_until/master/hrtu.meta.js
 // @grant        none
 // ==/UserScript==
 
@@ -18,7 +16,7 @@ var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
 var version_key = 'hrtu_last_version';
 var is_new_install = false;
-var current_version = '1.3.9';
+var current_version = '1.4.0';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
@@ -380,7 +378,8 @@ function releasePage() {
 	if ( ! jQuery( '.hrtu_instructions' ).length ) {
 		jQuery( jQuery( ".entry-content ul" ).get(0) ).append(
 			'<li class="hrtu_instructions">Click [+] or [-] on shows you\'re watching to highlight them</li>' +
-			'<li class="hrtu_instructions">Shows with [NEW] are newly listed, click on [NEW] to unmark individual shows or <span id="hrtu_unmark_all_new">click&nbsp;here</span> to unmark all of them at once.</li>'
+			'<li class="hrtu_instructions">Shows with [NEW] are newly listed, click on [NEW] to unmark individual shows or <span id="hrtu_unmark_all_new" class="hrtu_button">click&nbsp;here</span> to unmark all of them at once.</li>' +
+			'	<li class="hrtu_instructions">Currently viewing: <span id="hrtu_view_new" class="hrtu_button option selected">New</span> - <span id="hrtu_view_saved" class="hrtu_button option selected">Saved</span> - <span id="hrtu_view_unsaved" class="hrtu_button option selected">Unsaved</span></li>'
 		);
 	}
 
@@ -394,6 +393,36 @@ function releasePage() {
 			sideBar();
 		});
 	});
+
+	// toggle saved items
+		jQuery( "#hrtu_view_saved" ).unbind( "click" ).on( "click", function(){
+			var el = jQuery(this);
+			el.toggleClass( "selected" );
+			if ( el.hasClass( "selected" ) )
+				jQuery( ".schedule-page-item.hrtu_release_page_highlight" ).show();
+			else
+				jQuery( ".schedule-page-item.hrtu_release_page_highlight" ).hide();
+		});
+
+		// toggle unsaved items
+		jQuery( "#hrtu_view_unsaved" ).unbind( "click" ).on( "click", function(){
+			var el = jQuery(this);
+			el.toggleClass( "selected" );
+			if ( el.hasClass( "selected" ) )
+				jQuery( ".schedule-page-item:not( .hrtu_release_page_highlight ):not( .hrtu_release_page_highlight_new )" ).show();
+			else
+				jQuery( ".schedule-page-item:not( .hrtu_release_page_highlight ):not( .hrtu_release_page_highlight_new )" ).hide();
+		});
+
+		// toggle new items
+		jQuery( "#hrtu_view_new" ).unbind( "click" ).on( "click", function(){
+			var el = jQuery(this);
+			el.toggleClass( "selected" );
+			if ( el.hasClass( "selected" ) )
+				jQuery( ".schedule-page-item.hrtu_release_page_highlight_new" ).show();
+			else
+				jQuery( ".schedule-page-item.hrtu_release_page_highlight_new" ).hide();
+		});
 
 	var entry_day;
 	jQuery( '.entry-content' ).children().each(function(){
@@ -644,7 +673,7 @@ function addStyles() {
 		'		border-radius: 15px;' +
 		'		background: rgb( 220,0,0 );' +
 		'	}' +
-		'	#hrtu_unmark_all_new {' +
+		'	.hrtu_button {' +
 		'		height: 22px;' +
 		'		border: 1px solid rgb( 200,200,200 );' +
 		'		cursor: pointer;' +
@@ -653,8 +682,17 @@ function addStyles() {
 		'		padding: 0px 8px 2px;' +
 		'		box-shadow: 0px 0px 5px rgba( 0,0,0, 0.1 );' +
 		'	}' +
-		'	#hrtu_unmark_all_new:hover {' +
+		'	.hrtu_button:hover {' +
 		'		border-color: rgb( 120,120,120 );' +
+		'	}' +
+		'	.hrtu_button.option:before {' +
+		'		content: "✖";' +
+		'		color: red;' +
+		'		padding-right: 3px;' +
+		'	}' +
+		'	.hrtu_button.option.selected:before {' +
+		'		content: "✓";' +
+		'		color: green;' +
 		'	}' +
 		'	.hrtu_show_outbound_links {' +
 		'		padding: 0px 8px 2px;' +
@@ -697,6 +735,9 @@ function addStyles() {
 		'	.hrtu_sidebar  .hrtu_sidebar_highlight .hrtu_sidebar_show_name:before {' +
 		'		display: none;' +
 		'	}' +
+		'	.ind-show, .ind-show a {' +
+		'		white-space: unset;' +
+		'	}' +
 		'</style>'
 	);
 }
@@ -709,49 +750,88 @@ function allShowsPage() {
 			.prepend(
 				'<ul>' +
 				'	<li class="hrtu_instructions">Click [+] or [-] on shows you\'re watching to highlight them</li>' +
-				'	<li class="hrtu_instructions">Shows with [NEW] are newly listed, click on [NEW] to unmark individual shows or <span id="hrtu_unmark_all_new">click&nbsp;here</span> to unmark all of them at once.</li>' +
+				'	<li class="hrtu_instructions">Shows with [NEW] are newly listed, click on [NEW] to unmark individual shows or <span id="hrtu_unmark_all_new" class="hrtu_button">click&nbsp;here</span> to unmark all of them at once.</li>' +
+				'	<li class="hrtu_instructions">Currently viewing: <span id="hrtu_view_new" class="hrtu_button option selected">New</span> - <span id="hrtu_view_saved" class="hrtu_button option selected">Saved</span> - <span id="hrtu_view_unsaved" class="hrtu_button option selected">Unsaved</span></li>' +
 				'</ul>'
 			);
 
-		jQuery( '#hrtu_unmark_all_new' ).unbind( "click" ).on( "click", function(){
-			jQuery( '.ind-show.linkful' ).each(function(){
+		jQuery( "#hrtu_unmark_all_new" ).unbind( "click" ).on( "click", function(){
+			jQuery( ".ind-show" ).each(function(){
 				var title_el = jQuery(this);
 				var anchor_el = title_el.find( "a" ).first();
-				var title = fixTitle( anchor_el.text() );
-				var link = linkIdentifier( anchor_el.attr( "href" ) );
+				var title = ( title_el.hasClass( "linkful" ) ) ? fixTitle( anchor_el.text() ) : fixTitle( title_el.text() );
+				var link = ( title_el.hasClass( "linkful" ) ) ? linkIdentifier( anchor_el.attr( "href" ) ) : null;
 				addShow( title, link );
 				title_el.removeClass( "hrtu_release_page_highlight_new" );
 				sideBar();
 			});
 		});
 
+		// toggle saved items
+		jQuery( "#hrtu_view_saved" ).unbind( "click" ).on( "click", function(){
+			var el = jQuery(this);
+			el.toggleClass( "selected" );
+			if ( el.hasClass( "selected" ) )
+				jQuery( ".ind-show.hrtu_release_page_highlight" ).show();
+			else
+				jQuery( ".ind-show.hrtu_release_page_highlight" ).hide();
+		});
+
+		// toggle unsaved items
+		jQuery( "#hrtu_view_unsaved" ).unbind( "click" ).on( "click", function(){
+			var el = jQuery(this);
+			el.toggleClass( "selected" );
+			if ( el.hasClass( "selected" ) )
+				jQuery( ".ind-show:not( .hrtu_release_page_highlight ):not( .hrtu_release_page_highlight_new )" ).show();
+			else
+				jQuery( ".ind-show:not( .hrtu_release_page_highlight ):not( .hrtu_release_page_highlight_new )" ).hide();
+		});
+
+		// toggle new items
+		jQuery( "#hrtu_view_new" ).unbind( "click" ).on( "click", function(){
+			var el = jQuery(this);
+			el.toggleClass( "selected" );
+			if ( el.hasClass( "selected" ) )
+				jQuery( ".ind-show.hrtu_release_page_highlight_new" ).show();
+			else
+				jQuery( ".ind-show.hrtu_release_page_highlight_new" ).hide();
+		});
+
 	}
 
-	jQuery( ".ind-show.linkful" ).each(function(){
+	jQuery( ".ind-show" ).each(function(){
 		var title_el = jQuery(this);
 		var anchor_el = title_el.find( "a" ).first();
-		var title = fixTitle( anchor_el.text() );
-		var link = linkIdentifier( anchor_el.attr( "href" ) );
+		var title = ( title_el.hasClass( "linkful" ) ) ? fixTitle( anchor_el.text() ) : fixTitle( title_el.text() );
+		var link = ( title_el.hasClass( "linkful" ) ) ? linkIdentifier( anchor_el.attr( "href" ) ) : null;
+		//var title = fixTitle( anchor_el.text() );
+		//var link = linkIdentifier( anchor_el.attr( "href" ) );
 		anchor_el.text( title );
+
+		if ( title_el.hasClass( "linkless" ) )
+			anchor_el = title_el;
 
 		if ( isUserShow( title, link ) )
 			title_el.addClass( "hrtu_release_page_highlight" );
 		else
 			title_el.removeClass( "hrtu_release_page_highlight" );
+
 		if ( ! anchor_el.find( '.hrtu_release_page_toggle' ).length ) {
 			anchor_el.append( '<div class="hrtu_release_page_toggle"></div>' );
 			anchor_el.unbind( "click.hrtu_release_page_toggle" ).on( "click.hrtu_release_page_toggle", ".hrtu_release_page_toggle", function(e){
 				e.stopImmediatePropagation();
 				e.preventDefault();
-				var is_saved = jQuery(this).parent().parent().hasClass( "hrtu_release_page_highlight" );
+				// parent code here isn't working for .linkless items
+				var parent_el = ( jQuery(this).parent().hasClass( "linkless" ) ) ? jQuery(this).parent() : jQuery(this).parent().parent();
+				var is_saved = parent_el.hasClass( "hrtu_release_page_highlight" );
 				if ( is_saved ) {
 					removeUserShow( title, link );
 					hrtuSidebarRemoveShow( title );
-					jQuery(this).parent().parent().removeClass( "hrtu_release_page_highlight" );
+					parent_el.removeClass( "hrtu_release_page_highlight" );
 				}
 				else {
 					addUserShow( title, link );
-					jQuery(this).parent().parent().addClass( "hrtu_release_page_highlight" );
+					parent_el.addClass( "hrtu_release_page_highlight" ).removeClass( "hrtu_release_page_highlight_new" );
 				}
 				sideBar();
 			});
