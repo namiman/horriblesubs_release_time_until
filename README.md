@@ -11,3 +11,5 @@ Highlights shows that weren't listed the last time you visited
 Adds links to anime databases on the /shows/* pages
 
 Show saving is available on /release-page, /shows, and /current-season
+
+Adds filter buttons on /shows and /release-page to toggle new, saved, and unsaved shows
