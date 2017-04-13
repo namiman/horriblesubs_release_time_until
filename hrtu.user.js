@@ -4,29 +4,40 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.4.1
-// @date         2017-04-12
+// @version      1.4.2
+// @date         2017-04-13
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @grant        none
 // ==/UserScript==
 
 console.log( "Horriblesubs Release Time Until userscript loaded" );
 
-var user_shows_key = 'hrtu_user_shows';
-var all_shows_key = 'hrtu_all_shows';
-var version_key = 'hrtu_last_version';
+var key = {
+	user_shows: 'hrtu_user_shows',
+	all_shows: 'hrtu_all_shows',
+	version: 'hrtu_last_version',
+	state: 'hrtu_release_schedule_state',
+};
 var is_new_install = false;
-var current_version = '1.4.1';
-var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
+var current_version = '1.4.2';
+var user_shows = JSON.parse( localStorage.getItem( key.user_shows ) );
 if ( ! user_shows )
 	user_shows = {};
-var all_shows = JSON.parse( localStorage.getItem( all_shows_key ) );
+var all_shows = JSON.parse( localStorage.getItem( key.all_shows ) );
 if ( ! all_shows )
 	all_shows = {};
-var script_version = localStorage.getItem( version_key );
+var script_version = localStorage.getItem( key.version );
 if ( ! script_version ) {
 	is_new_install = true;
 	script_version = current_version;
+}
+var state = JSON.parse( localStorage.getItem( key.state ) );
+if ( ! state ) {
+	state = {
+		saved: 1,
+		unsaved: 1,
+		new: 1,
+	};
 }
 
 function updateVersion() {
@@ -34,7 +45,7 @@ function updateVersion() {
 		console.log( "HRTU version: "+ current_version );
 		showAlert( 'Congratulations on installing <a href="https://github.com/namiman/horriblesubs_release_time_until/">HRTU</a>. You may find instructions on the <a href="/release-schedule/">release schedule</a> page. <div class="close">x</div>' );
 	}
-	localStorage.setItem( version_key, current_version );
+	localStorage.setItem( key.version, current_version );
 }
 
 var weekdays = [
@@ -197,7 +208,7 @@ function addShow( title, link ) {
 		else
 			all_shows[ title ] = 1;
 	}
-	localStorage.setItem( all_shows_key, JSON.stringify( all_shows ) );
+	localStorage.setItem( key.all_shows, JSON.stringify( all_shows ) );
 }
 
 function isAllShow( title, link ) {
@@ -209,7 +220,7 @@ function isAllShow( title, link ) {
 		else {
 			all_shows[ title ] = 1;
 		}
-		localStorage.setItem( all_shows_key, JSON.stringify( all_shows ) );
+		localStorage.setItem( key.all_shows, JSON.stringify( all_shows ) );
 		return true;
 	}
 	else {
@@ -233,7 +244,7 @@ function addUserShow( title, link ) {
 		else
 			user_shows[ title ] = 1;
 	}
-	localStorage.setItem( user_shows_key, JSON.stringify( user_shows ) );
+	localStorage.setItem( key.user_shows, JSON.stringify( user_shows ) );
 
 	if ( ! isAllShow( title, link ) )
 		addShow( title, link );
@@ -242,7 +253,7 @@ function addUserShow( title, link ) {
 function removeUserShow( title, link ) {
 	delete user_shows[ title ];
 	delete user_shows[ link ];
-	localStorage.setItem( user_shows_key, JSON.stringify( user_shows ) );
+	localStorage.setItem( key.user_shows, JSON.stringify( user_shows ) );
 }
 function isUserShow( title, link ) {
 	if ( ( typeof user_shows[ title ] !== "undefined" ) ) {
@@ -253,7 +264,7 @@ function isUserShow( title, link ) {
 		else {
 			user_shows[ title ] = 1;
 		}
-		localStorage.setItem( user_shows_key, JSON.stringify( user_shows ) );
+		localStorage.setItem( key.user_shows, JSON.stringify( user_shows ) );
 		return true;
 	}
 	else {
@@ -368,7 +379,79 @@ function releasePageMakeShow( title_el, has_link ) {
 		title_el.parent().removeClass( "hrtu_release_page_highlight_new" );
 }
 
+function updateStateClass( property ) {
+
+	var result = state[ property ];
+
+	if ( property == "new" )
+		var el = jQuery( "#hrtu_view_new" );
+	else if ( property == "saved" )
+		var el = jQuery( "#hrtu_view_saved" );
+	else if ( property == "unsaved" )
+		var el = jQuery( "#hrtu_view_unsaved" );
+	else
+		return false;
+	
+	if ( result )
+		el.addClass( "selected" );
+	else
+		el.removeClass( "selected" );
+}
+
+function updateStateView( property ) {
+
+	var result = state[ property ];
+
+	if ( property == "new" )
+		var el = jQuery( ".schedule-page-item.hrtu_release_page_highlight_new" );
+	else if ( property == "saved" )
+		var el = jQuery( ".schedule-page-item.hrtu_release_page_highlight" );
+	else if ( property == "unsaved" )
+		var el = jQuery( ".schedule-page-item:not( .hrtu_release_page_highlight ):not( .hrtu_release_page_highlight_new )" );
+	else
+		return false;
+
+	if ( result )
+		el.show();
+	else
+		el.hide();
+
+}
+
+function getState( property ) {
+	return state[ property ];
+}
+
+function updateState( property, value ) {
+
+	if ( typeof value !== "undefined" )
+		state[ property ] = value;
+
+	updateStateClass( property );
+	updateStateView( property );
+	saveStateData();
+
+}
+
+function saveStateData() {
+	localStorage.setItem( key.state, JSON.stringify( state ) );
+}
+
+function updateAllStateViews() {
+
+	var properties = [
+		"new",
+		"saved",
+		"unsaved",
+	];
+
+	properties.forEach(function( property ){
+		updateState( property );
+	});
+}
+
 function releasePage() {
+
 	if ( ! jQuery( '.entry-content' ).length || ! jQuery( '.entry-content' ).children().length ) {
 		console.warn( "Horriblesubs Release Time Until releasePage(): Unable to find release entries" );
 		return false;
@@ -378,7 +461,7 @@ function releasePage() {
 		jQuery( jQuery( ".entry-content ul" ).get(0) ).append(
 			'<li class="hrtu_instructions">Click [+] or [-] on shows you\'re watching to highlight them</li>' +
 			'<li class="hrtu_instructions">Shows with [NEW] are newly listed, click on [NEW] to unmark individual shows or <span id="hrtu_unmark_all_new" class="hrtu_button">click&nbsp;here</span> to unmark all of them at once.</li>' +
-			'	<li class="hrtu_instructions">Currently viewing: <span id="hrtu_view_new" class="hrtu_button option selected">New</span> - <span id="hrtu_view_saved" class="hrtu_button option selected">Saved</span> - <span id="hrtu_view_unsaved" class="hrtu_button option selected">Unsaved</span></li>'
+			'	<li class="hrtu_instructions">Currently viewing: <span id="hrtu_view_new" class="hrtu_button option">New</span> - <span id="hrtu_view_saved" class="hrtu_button option">Saved</span> - <span id="hrtu_view_unsaved" class="hrtu_button option">Unsaved</span></li>'
 		);
 	}
 
@@ -394,34 +477,28 @@ function releasePage() {
 	});
 
 	// toggle saved items
-		jQuery( "#hrtu_view_saved" ).unbind( "click" ).on( "click", function(){
-			var el = jQuery(this);
-			el.toggleClass( "selected" );
-			if ( el.hasClass( "selected" ) )
-				jQuery( ".schedule-page-item.hrtu_release_page_highlight" ).show();
-			else
-				jQuery( ".schedule-page-item.hrtu_release_page_highlight" ).hide();
-		});
+	jQuery( "#hrtu_view_new" ).unbind( "click" ).on( "click", function(){
+		if ( getState( "new" ) )
+			updateState( "new", 0 );
+		else
+			updateState( "new", 1 );
+	});
 
-		// toggle unsaved items
-		jQuery( "#hrtu_view_unsaved" ).unbind( "click" ).on( "click", function(){
-			var el = jQuery(this);
-			el.toggleClass( "selected" );
-			if ( el.hasClass( "selected" ) )
-				jQuery( ".schedule-page-item:not( .hrtu_release_page_highlight ):not( .hrtu_release_page_highlight_new )" ).show();
-			else
-				jQuery( ".schedule-page-item:not( .hrtu_release_page_highlight ):not( .hrtu_release_page_highlight_new )" ).hide();
-		});
+	// toggle unsaved items
+	jQuery( "#hrtu_view_saved" ).unbind( "click" ).on( "click", function(){
+		if ( getState( "saved" ) )
+			updateState( "saved", 0 );
+		else
+			updateState( "saved", 1 );
+	});
 
-		// toggle new items
-		jQuery( "#hrtu_view_new" ).unbind( "click" ).on( "click", function(){
-			var el = jQuery(this);
-			el.toggleClass( "selected" );
-			if ( el.hasClass( "selected" ) )
-				jQuery( ".schedule-page-item.hrtu_release_page_highlight_new" ).show();
-			else
-				jQuery( ".schedule-page-item.hrtu_release_page_highlight_new" ).hide();
-		});
+	// toggle new items
+	jQuery( "#hrtu_view_unsaved" ).unbind( "click" ).on( "click", function(){
+		if ( getState( "unsaved" ) )
+			updateState( "unsaved", 0 );
+		else
+			updateState( "unsaved", 1 );
+	});
 
 	var entry_day;
 	jQuery( '.entry-content' ).children().each(function(){
@@ -501,6 +578,8 @@ function releasePage() {
 			});
 		}
 	});
+
+	updateAllStateViews();
 }
 
 function hrtuSidebarAddShow( title, otime, time_text, href ) {
