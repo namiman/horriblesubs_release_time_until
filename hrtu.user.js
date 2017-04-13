@@ -4,8 +4,8 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.4.0
-// @date         2017-02-26
+// @version      1.4.1
+// @date         2017-04-12
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @grant        none
 // ==/UserScript==
@@ -16,7 +16,7 @@ var user_shows_key = 'hrtu_user_shows';
 var all_shows_key = 'hrtu_all_shows';
 var version_key = 'hrtu_last_version';
 var is_new_install = false;
-var current_version = '1.4.0';
+var current_version = '1.4.1';
 var user_shows = JSON.parse( localStorage.getItem( user_shows_key ) );
 if ( ! user_shows )
 	user_shows = {};
@@ -262,7 +262,6 @@ function isUserShow( title, link ) {
 }
 
 function releasePageUserRefreshShowView( el, title, link, is_user_saved, is_all_saved ) {
-	var has_link = el.hasClass( "schedule-page-show" );
 	is_all_saved = is_all_saved || isAllShow( title, link );
 
 	if ( is_user_saved )
@@ -866,9 +865,9 @@ function showPage() {
 		if ( ! info_el.find( ".hrtu_show_outbound_links" ).length ) {
 			info_el.append(
 				'<div class="hrtu_show_outbound_links">' +
-				'	<a class="hrtu_show_outbound_link"href="http://anidb.net/perl-bin/animedb.pl?adb.search='+ title +'&show=animelist&do.search=search">aniDB</a>' +
-				'	<a class="hrtu_show_outbound_link" href="http://www.anime-planet.com/anime/all?name='+ title +'">Anime-Planet</a>' +
-				'	<a class="hrtu_show_outbound_link" href="http://myanimelist.net/anime.php?q='+ title +'">MAL</a>' +
+				'	<a class="hrtu_show_outbound_link" href="https://anidb.net/perl-bin/animedb.pl?adb.search='+ title +'&show=animelist&do.search=search">aniDB</a>' +
+				'	<a class="hrtu_show_outbound_link" href="https://www.anime-planet.com/anime/all?name='+ title +'">Anime-Planet</a>' +
+				'	<a class="hrtu_show_outbound_link" href="https://myanimelist.net/anime.php?q='+ title +'">MAL</a>' +
 				'	<a class="hrtu_show_outbound_link" href="https://hummingbird.me/search?query='+ title +'">Hummingbird</a>' +
 				'</div>'
 			);
