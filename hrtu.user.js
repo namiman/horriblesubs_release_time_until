@@ -7,6 +7,7 @@
 // @version      1.4.2
 // @date         2017-04-13
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
+// @require      https://code.jquery.com/jquery-3.2.1.slim.min.js
 // @grant        none
 // ==/UserScript==
 
