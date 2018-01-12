@@ -4,8 +4,8 @@
 // @description  Change times on horriblesubs to "until/ago", highlight shows you're watching, and highlights newly added shows, and adds links to various anime databases
 // @homepageURL  https://github.com/namiman/horriblesubs_release_time_until
 // @author       namiman
-// @version      1.4.2
-// @date         2017-04-13
+// @version      1.4.3
+// @date         2018-01-11
 // @include      /^https?:\/\/horriblesubs\.info\/.*/
 // @require      https://code.jquery.com/jquery-3.2.1.slim.min.js
 // @grant        none
@@ -20,7 +20,7 @@ var key = {
 	state: 'hrtu_release_schedule_state',
 };
 var is_new_install = false;
-var current_version = '1.4.2';
+var current_version = '1.4.3';
 var user_shows = JSON.parse( localStorage.getItem( key.user_shows ) );
 if ( ! user_shows )
 	user_shows = {};
