@@ -1,4 +1,7 @@
-# Horriblesubs Release Time Until
+# Horriblesubs Release Time Until [Readonly]
+
+UPDATE: With the closing Horriblesubs this project is now closed.
+
 
 Changes the times on Horriblesubs /release-page and the sidebar on every page to "until/ago" format
 
